@@ -1,0 +1,20 @@
+{
+  "name": "Sky Sweet Treats — Staff Dashboard",
+  "short_name": "SST Staff",
+  "start_url": "dashboard.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#FF5722",
+  "icons": [
+    {
+      "src": "images/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "images/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

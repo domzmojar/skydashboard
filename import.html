@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Importer | Sky Sweet Treats</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .container { max-width: 700px; }
+        .card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
+        textarea { width: 100%; min-height: 140px; padding: 12px; border: 2px solid #ddd; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.8rem; }
+        .map-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .map-row label { width: 130px; font-size: 0.85rem; font-weight: 600; }
+        .map-row select { flex: 1; padding: 8px; border: 2px solid #ddd; border-radius: var(--radius-sm); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 10px; }
+        th, td { border: 1px solid #eee; padding: 6px 8px; text-align: left; }
+        th { background: #fafafa; }
+        .login-box input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: var(--radius-sm); margin-bottom: 10px; }
+        .hint { font-size: 0.8rem; color: var(--text-medium); margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="container header-flex">
+            <div class="brand-text"><h1>📥 Menu Importer</h1><p>One-time tool: bring your Sheet menu into Supabase</p></div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top:20px;">
+        <div class="card" id="login-card">
+            <h3>🔐 Staff Login</h3>
+            <p class="hint">This tool writes directly to your menu_items table, so it's staff-only.</p>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button class="btn-primary" onclick="doLogin()">Log In</button>
+            <div id="login-error" style="color:#C62828; font-size:0.85rem; margin-top:8px;"></div>
+        </div>
+
+        <div id="import-tools" style="display:none;">
+            <div class="card">
+                <h3>1. Paste your menu CSV</h3>
+                <p class="hint">
+                    Open your Google Sheet → File → Share → Publish to web → CSV, then paste the published CSV URL below and click Fetch,
+                    or copy/paste the raw CSV data directly into the box.
+                </p>
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" style="flex:1; padding:10px; border:2px solid #ddd; border-radius:var(--radius-sm);">
+                    <button class="btn-secondary" onclick="fetchFromUrl()" style="width:auto; padding:0 16px;">Fetch</button>
+                </div>
+                <textarea id="csv-input" placeholder="Or paste raw CSV here..."></textarea>
+                <button class="btn-secondary" style="margin-top:10px;" onclick="parseCsv()">Parse CSV</button>
+            </div>
+
+            <div class="card" id="mapping-card" style="display:none;">
+                <h3>2. Map your columns</h3>
+                <p class="hint">Skip any field your sheet doesn't have. Rows missing a required ID or Name will be skipped.</p>
+                <div id="mapping-rows"></div>
+                <button class="btn-secondary" style="margin-top:10px;" onclick="buildPreview()">Preview Import</button>
+            </div>
+
+            <div class="card" id="preview-card" style="display:none;">
+                <h3>3. Preview &amp; Import</h3>
+                <p class="hint" id="preview-summary"></p>
+                <div style="overflow-x:auto;"><table id="preview-table"></table></div>
+                <button class="btn-primary" style="margin-top:14px;" onclick="runImport()">✅ Import to Supabase</button>
+                <div id="import-result" style="margin-top:10px; font-size:0.9rem;"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = "https://rmtberbypsjcydomvhvu.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGJlcmJ5cHNqY3lkb212aHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTU0NDYsImV4cCI6MjEwMzM5MTQ0Nn0.mgo9Cj8ManeLMF9DVA__7a4iAZ7OmYu81NkAEY7Pov0";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        const FIELDS = [
+            { key: 'id', label: 'ID (unique)', required: true },
+            { key: 'name', label: 'Name', required: true },
+            { key: 'category', label: 'Category', required: false },
+            { key: 'price', label: 'Price', required: false },
+            { key: 'stock', label: 'Stock', required: false },
+            { key: 'details', label: 'Details', required: false },
+            { key: 'badge', label: 'Badge', required: false },
+            { key: 'image', label: 'Image URL', required: false },
+            { key: 'variant_options', label: 'Flavors (comma-separated)', required: false }
+        ];
+
+        let csvHeaders = [];
+        let csvRows = [];
+        let previewData = [];
+
+        function showToast(msg, dur = 2500) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), dur);
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errBox = document.getElementById('login-error');
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) { errBox.textContent = '❌ ' + error.message; return; }
+            document.getElementById('login-card').style.display = 'none';
+            document.getElementById('import-tools').style.display = 'block';
+        }
+
+        async function fetchFromUrl() {
+            const url = document.getElementById('sheet-url').value.trim();
+            if (!url) return showToast('⚠️ Paste your published CSV URL first');
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                document.getElementById('csv-input').value = text;
+                showToast('✅ Fetched — now click Parse CSV');
+            } catch (e) {
+                showToast('❌ Could not fetch that URL directly (CORS). Paste the CSV manually instead.');
+            }
+        }
+
+        function parseCsvLine(line) {
+            const result = [];
+            let cur = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+                    else inQuotes = !inQuotes;
+                } else if (ch === ',' && !inQuotes) {
+                    result.push(cur); cur = '';
+                } else {
+                    cur += ch;
+                }
+            }
+            result.push(cur);
+            return result;
+        }
+
+        function parseCsv() {
+            const raw = document.getElementById('csv-input').value.trim();
+            if (!raw) return showToast('⚠️ Paste or fetch CSV data first');
+
+            const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
+            if (lines.length < 2) return showToast('⚠️ CSV needs a header row plus at least one data row');
+
+            csvHeaders = parseCsvLine(lines[0]).map(h => h.trim());
+            csvRows = lines.slice(1).map(l => parseCsvLine(l));
+
+            renderMapping();
+            document.getElementById('mapping-card').style.display = 'block';
+            document.getElementById('preview-card').style.display = 'none';
+            showToast(`✅ Parsed ${csvRows.length} rows — now map your columns`);
+        }
+
+        function renderMapping() {
+            const container = document.getElementById('mapping-rows');
+            container.innerHTML = FIELDS.map(f => {
+                const options = csvHeaders.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+                const guessIndex = csvHeaders.findIndex(h => h.toLowerCase().includes(f.key.replace('_', '')));
+                return `
+                    <div class="map-row">
+                        <label>${f.label}${f.required ? ' *' : ''}</label>
+                        <select id="map-${f.key}">
+                            <option value="">— skip —</option>
+                            ${options}
+                        </select>
+                    </div>
+                `;
+            }).join('');
+
+            // auto-guess simple matches
+            FIELDS.forEach(f => {
+                const idx = csvHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '') === f.key.replace('_', ''));
+                if (idx !== -1) document.getElementById(`map-${f.key}`).value = idx;
+            });
+        }
+
+        function buildPreview() {
+            const mapping = {};
+            FIELDS.forEach(f => {
+                const val = document.getElementById(`map-${f.key}`).value;
+                mapping[f.key] = val === '' ? null : parseInt(val);
+            });
+
+            if (mapping.id === null || mapping.name === null) {
+                return showToast('⚠️ ID and Name columns are required');
+            }
+
+            previewData = [];
+            csvRows.forEach(row => {
+                const id = (row[mapping.id] || '').trim();
+                const name = (row[mapping.name] || '').trim();
+                if (!id || !name) return;
+
+                previewData.push({
+                    id,
+                    name,
+                    category: mapping.category !== null ? (row[mapping.category] || 'Uncategorized').trim() : 'Uncategorized',
+                    price: mapping.price !== null ? parseFloat(row[mapping.price]) || 0 : 0,
+                    stock: mapping.stock !== null ? parseInt(row[mapping.stock]) || 0 : 0,
+                    details: mapping.details !== null ? (row[mapping.details] || '').trim() : '',
+                    badge: mapping.badge !== null ? (row[mapping.badge] || '').trim() : '',
+                    image: mapping.image !== null ? (row[mapping.image] || '').trim() : '',
+                    variant_options: mapping.variant_options !== null
+                        ? (row[mapping.variant_options] || '').split(',').map(s => s.trim()).filter(Boolean)
+                        : []
+                });
+            });
+
+            document.getElementById('preview-summary').textContent = `${previewData.length} valid rows ready to import (of ${csvRows.length} total rows).`;
+
+            const table = document.getElementById('preview-table');
+            const cols = ['id', 'name', 'category', 'price', 'stock', 'variant_options'];
+            table.innerHTML = `
+                <tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>
+                ${previewData.slice(0, 15).map(r => `<tr>${cols.map(c => `<td>${Array.isArray(r[c]) ? r[c].join('|') : r[c]}</td>`).join('')}</tr>`).join('')}
+            `;
+            if (previewData.length > 15) {
+                table.innerHTML += `<tr><td colspan="${cols.length}" style="text-align:center; color:var(--text-light);">…and ${previewData.length - 15} more</td></tr>`;
+            }
+
+            document.getElementById('preview-card').style.display = 'block';
+        }
+
+        async function runImport() {
+            if (previewData.length === 0) return showToast('⚠️ Nothing to import');
+            const resultBox = document.getElementById('import-result');
+            resultBox.textContent = '⏳ Importing…';
+
+            const { error } = await supabaseClient.from('menu_items').upsert(previewData, { onConflict: 'id' });
+
+            if (error) {
+                resultBox.textContent = '❌ Import failed: ' + error.message;
+                showToast('❌ Import failed');
+                return;
+            }
+            resultBox.textContent = `✅ Imported ${previewData.length} menu items successfully!`;
+            showToast('✅ Menu imported!');
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                document.getElementById('login-card').style.display = 'none';
+                document.getElementById('import-tools').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
