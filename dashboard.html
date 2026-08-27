@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Staff Dashboard | Sky Sweet Treats</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF5722">
+    <link rel="icon" type="image/x-icon" href="images/logo.jpg">
+    <style>
+        body { padding-bottom: 40px; }
+        .container { max-width: 800px; }
+
+        /* LOGIN */
+        #login-screen { max-width: 380px; margin: 60px auto; padding: 0 16px; }
+        .login-box { background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); }
+        .login-box h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        .login-box input {
+            width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: var(--radius-sm);
+            margin-bottom: 12px; font-family: inherit; font-size: 0.95rem;
+        }
+        .login-box input:focus { border-color: var(--primary); outline: none; }
+        .login-error { color: #C62828; font-size: 0.85rem; text-align: center; margin-top: 8px; display: none; }
+
+        /* DASHBOARD SHELL */
+        #dash-screen { display: none; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
+        .dash-header h1 { font-size: 1.2rem; color: var(--primary); }
+        .logout-btn { background: none; border: 2px solid #ddd; border-radius: 30px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; color: var(--text-medium); }
+
+        /* SNAPSHOT CARDS */
+        .snapshot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 20px; }
+        .snap-card { background: white; border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; box-shadow: var(--shadow); }
+        .snap-card .num { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .snap-card .lbl { font-size: 0.7rem; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.3px; }
+
+        /* TABS */
+        .dash-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+        .dash-tabs::-webkit-scrollbar { display: none; }
+        .dash-tab {
+            flex-shrink: 0; background: #f1f3f5; border: none; padding: 8px 16px; border-radius: 30px;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-medium);
+        }
+        .dash-tab.active { background: var(--primary); color: white; }
+
+        /* ORDER CARDS */
+        .order-card { background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); }
+        .order-card.status-cancelled { border-left-color: #C62828; opacity: 0.7; }
+        .order-card.status-completed { border-left-color: #2E7D32; }
+        .order-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .order-num { font-weight: 700; color: var(--primary); font-size: 1rem; }
+        .order-time { font-size: 0.72rem; color: var(--text-light); }
+        .order-customer { font-weight: 600; margin-bottom: 4px; }
+        .order-sub { font-size: 0.8rem; color: var(--text-medium); margin-bottom: 8px; }
+        .order-items-list { font-size: 0.85rem; color: var(--text-dark); background: #fafafa; border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; }
+        .order-items-list div { padding: 2px 0; }
+        .order-total-row { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; }
+        .order-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .obadge { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
+        .obadge.pending { background: #FFF3E0; color: #E65100; }
+        .obadge.accepted { background: #E3F2FD; color: #1565C0; }
+        .obadge.preparing { background: #F3E5F5; color: #6A1B9A; }
+        .obadge.ready { background: #E8F5E9; color: #2E7D32; }
+        .obadge.completed { background: #E0E0E0; color: #424242; }
+        .obadge.cancelled { background: #FFEBEE; color: #C62828; }
+        .obadge.unpaid { background: #FFEBEE; color: #C62828; }
+        .obadge.awaiting_confirmation { background: #FFF3E0; color: #E65100; }
+        .obadge.paid { background: #E8F5E9; color: #2E7D32; }
+        .order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn {
+            flex: 1; min-width: 90px; border: none; padding: 10px; border-radius: var(--radius-sm);
+            font-weight: 600; font-size: 0.82rem; cursor: pointer; color: white;
+        }
+        .action-btn.accept { background: #1565C0; }
+        .action-btn.preparing { background: #6A1B9A; }
+        .action-btn.ready { background: #2E7D32; }
+        .action-btn.complete { background: #424242; }
+        .action-btn.cancel { background: #C62828; }
+        .action-btn.paid { background: #2E7D32; }
+        .empty-state { text-align: center; color: var(--text-light); padding: 40px 10px; }
+
+        /* INVENTORY */
+        .inv-row { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+        .inv-name { font-weight: 600; font-size: 0.9rem; }
+        .inv-cat { font-size: 0.72rem; color: var(--text-light); }
+        .inv-stock-controls { display: flex; align-items: center; gap: 8px; }
+        .inv-stock-controls button {
+            width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ddd; background: white;
+            font-weight: bold; cursor: pointer;
+        }
+        .inv-stock-val { min-width: 26px; text-align: center; font-weight: 700; }
+        .inv-stock-val.zero { color: #C62828; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>🔐 Staff Login</h2>
+            <input type="email" id="login-email" placeholder="Email" autocomplete="username">
+            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+            <button class="btn-primary" onclick="doLogin()">Log In</button>
+            <div class="login-error" id="login-error"></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dash-screen">
+        <div class="container">
+            <div class="dash-header">
+                <h1>🍰 Sky Sweet Treats — Dashboard</h1>
+                <button class="logout-btn" onclick="doLogout()">Log out</button>
+            </div>
+
+            <div class="snapshot-row">
+                <div class="snap-card"><div class="num" id="snap-today-orders">0</div><div class="lbl">Orders today</div></div>
+                <div class="snap-card"><div class="num" id="snap-today-sales">₱0</div><div class="lbl">Sales today</div></div>
+                <div class="snap-card"><div class="num" id="snap-pending">0</div><div class="lbl">Needs review</div></div>
+            </div>
+
+            <div class="dash-tabs" id="dash-tabs">
+                <button class="dash-tab active" data-tab="active">🔥 Active</button>
+                <button class="dash-tab" data-tab="pending">📝 Pending</button>
+                <button class="dash-tab" data-tab="completed">✅ Completed</button>
+                <button class="dash-tab" data-tab="cancelled">❌ Cancelled</button>
+                <button class="dash-tab" data-tab="inventory">📦 Inventory</button>
+            </div>
+
+            <div id="orders-panel"></div>
+            <div id="inventory-panel" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = "https://rmtberbypsjcydomvhvu.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGJlcmJ5cHNqY3lkb212aHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTU0NDYsImV4cCI6MjEwMzM5MTQ0Nn0.mgo9Cj8ManeLMF9DVA__7a4iAZ7OmYu81NkAEY7Pov0";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: true, autoRefreshToken: true }
+        });
+
+        let allOrders = [];
+        let allItemsByOrder = {};
+        let menuItems = [];
+        let currentTab = 'active';
+
+        function showToast(message, duration = 2500) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // ============ AUTH ============
+        async function doLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errBox = document.getElementById('login-error');
+            errBox.style.display = 'none';
+
+            if (!email || !password) {
+                errBox.textContent = 'Please enter email and password';
+                errBox.style.display = 'block';
+                return;
+            }
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                errBox.textContent = '❌ ' + error.message;
+                errBox.style.display = 'block';
+                return;
+            }
+            enterDashboard();
+        }
+
+        async function doLogout() {
+            await supabaseClient.auth.signOut();
+            document.getElementById('dash-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+        }
+
+        async function enterDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dash-screen').style.display = 'block';
+            await loadOrders();
+            await loadInventory();
+            setupRealtime();
+        }
+
+        // ============ ORDERS ============
+        async function loadOrders() {
+            const { data: orders, error } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(200);
+
+            if (error) { showToast('❌ Could not load orders'); console.error(error); return; }
+            allOrders = orders || [];
+
+            const { data: items, error: itemsErr } = await supabaseClient
+                .from('order_items')
+                .select('*')
+                .in('order_id', allOrders.map(o => o.id).length ? allOrders.map(o => o.id) : ['00000000-0000-0000-0000-000000000000']);
+
+            if (!itemsErr) {
+                allItemsByOrder = {};
+                (items || []).forEach(it => {
+                    if (!allItemsByOrder[it.order_id]) allItemsByOrder[it.order_id] = [];
+                    allItemsByOrder[it.order_id].push(it);
+                });
+            }
+
+            renderSnapshot();
+            renderOrders();
+        }
+
+        function renderSnapshot() {
+            const todayStr = new Date().toDateString();
+            const todayOrders = allOrders.filter(o => new Date(o.created_at).toDateString() === todayStr && o.status !== 'cancelled');
+            const todaySales = todayOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+            const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+
+            document.getElementById('snap-today-orders').textContent = todayOrders.length;
+            document.getElementById('snap-today-sales').textContent = `₱${todaySales.toFixed(0)}`;
+            document.getElementById('snap-pending').textContent = pendingCount;
+        }
+
+        function filteredOrders() {
+            if (currentTab === 'active') return allOrders.filter(o => ['pending', 'accepted', 'preparing', 'ready'].includes(o.status));
+            if (currentTab === 'pending') return allOrders.filter(o => o.status === 'pending');
+            if (currentTab === 'completed') return allOrders.filter(o => o.status === 'completed');
+            if (currentTab === 'cancelled') return allOrders.filter(o => o.status === 'cancelled');
+            return allOrders;
+        }
+
+        function orderActionsHtml(o) {
+            const btns = [];
+            if (o.status === 'pending') {
+                btns.push(`<button class="action-btn accept" onclick="updateStatus('${o.id}','accepted')">✅ Accept</button>`);
+                btns.push(`<button class="action-btn cancel" onclick="updateStatus('${o.id}','cancelled')">❌ Reject</button>`);
+            } else if (o.status === 'accepted') {
+                btns.push(`<button class="action-btn preparing" onclick="updateStatus('${o.id}','preparing')">👩‍🍳 Start Preparing</button>`);
+                btns.push(`<button class="action-btn cancel" onclick="updateStatus('${o.id}','cancelled')">❌ Cancel</button>`);
+            } else if (o.status === 'preparing') {
+                btns.push(`<button class="action-btn ready" onclick="updateStatus('${o.id}','ready')">📦 Mark Ready</button>`);
+            } else if (o.status === 'ready') {
+                btns.push(`<button class="action-btn complete" onclick="updateStatus('${o.id}','completed')">🎉 Complete</button>`);
+            }
+            if (o.payment_status !== 'paid' && o.status !== 'cancelled') {
+                btns.push(`<button class="action-btn paid" onclick="markPaid('${o.id}')">💰 Mark Paid</button>`);
+            }
+            return btns.join('');
+        }
+
+        function renderOrders() {
+            const panel = document.getElementById('orders-panel');
+            const list = filteredOrders();
+
+            if (list.length === 0) {
+                panel.innerHTML = `<div class="empty-state"><p style="font-size:1.1rem;">📭 No orders here</p></div>`;
+                return;
+            }
+
+            panel.innerHTML = list.map(o => {
+                const items = allItemsByOrder[o.id] || [];
+                const itemsHtml = items.map(it => `<div>${it.qty}x ${it.product_name}${it.flavor ? ' (' + it.flavor + ')' : ''} — ₱${(it.price * it.qty).toFixed(2)}</div>`).join('');
+                const time = new Date(o.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="order-card status-${o.status}">
+                        <div class="order-top">
+                            <span class="order-num">${o.order_number}</span>
+                            <span class="order-time">${time}</span>
+                        </div>
+                        <div class="order-customer">👤 ${o.customer_name}</div>
+                        <div class="order-sub">
+                            ${o.order_type === 'Delivery' ? `🏠 ${o.shipping_zone || ''} — ${o.landmark || ''}` : '🚗 Pick-up'}
+                            &nbsp;•&nbsp; ${o.payment_method}
+                        </div>
+                        <div class="order-items-list">${itemsHtml || '<em>No items recorded</em>'}</div>
+                        <div class="order-total-row"><span>Total</span><span>₱${parseFloat(o.total).toFixed(2)}</span></div>
+                        <div class="order-badges">
+                            <span class="obadge ${o.status}">${o.status}</span>
+                            <span class="obadge ${o.payment_status}">${o.payment_status.replace('_',' ')}</span>
+                        </div>
+                        <div class="order-actions">${orderActionsHtml(o)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.updateStatus = async function(orderId, status) {
+            const { error } = await supabaseClient.from('orders').update({ status }).eq('id', orderId);
+            if (error) return showToast('❌ Could not update order');
+            showToast(`✅ Order marked as ${status}`);
+            await loadOrders();
+        };
+
+        window.markPaid = async function(orderId) {
+            const { error } = await supabaseClient.from('orders').update({ payment_status: 'paid' }).eq('id', orderId);
+            if (error) return showToast('❌ Could not update payment status');
+            showToast('💰 Marked as paid');
+            await loadOrders();
+        };
+
+        // ============ INVENTORY ============
+        async function loadInventory() {
+            const { data, error } = await supabaseClient.from('menu_items').select('*').order('sort_order', { ascending: true });
+            if (error) { showToast('❌ Could not load inventory'); return; }
+            menuItems = data || [];
+            renderInventory();
+        }
+
+        function renderInventory() {
+            const panel = document.getElementById('inventory-panel');
+            if (menuItems.length === 0) {
+                panel.innerHTML = `<div class="empty-state"><p>📭 No menu items yet</p></div>`;
+                return;
+            }
+            panel.innerHTML = menuItems.map(p => `
+                <div class="inv-row">
+                    <div>
+                        <div class="inv-name">${p.name}</div>
+                        <div class="inv-cat">${p.category}</div>
+                    </div>
+                    <div class="inv-stock-controls">
+                        <button onclick="changeStock('${p.id}', -1)">−</button>
+                        <span class="inv-stock-val ${p.stock <= 0 ? 'zero' : ''}" id="stock-${p.id}">${p.stock}</span>
+                        <button onclick="changeStock('${p.id}', 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.changeStock = async function(id, delta) {
+            const item = menuItems.find(p => p.id === id);
+            if (!item) return;
+            const newStock = Math.max(0, item.stock + delta);
+            const { error } = await supabaseClient.from('menu_items').update({ stock: newStock }).eq('id', id);
+            if (error) return showToast('❌ Could not update stock');
+            item.stock = newStock;
+            const el = document.getElementById(`stock-${id}`);
+            el.textContent = newStock;
+            el.classList.toggle('zero', newStock <= 0);
+        };
+
+        // ============ TABS ============
+        document.getElementById('dash-tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.dash-tab');
+            if (!btn) return;
+            document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            currentTab = btn.dataset.tab;
+
+            const ordersPanel = document.getElementById('orders-panel');
+            const invPanel = document.getElementById('inventory-panel');
+            if (currentTab === 'inventory') {
+                ordersPanel.style.display = 'none';
+                invPanel.style.display = 'block';
+            } else {
+                ordersPanel.style.display = 'block';
+                invPanel.style.display = 'none';
+                renderOrders();
+            }
+        });
+
+        // ============ REALTIME ============
+        function setupRealtime() {
+            supabaseClient
+                .channel('staff:orders')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadOrders())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => loadOrders())
+                .subscribe();
+
+            supabaseClient
+                .channel('staff:menu_items')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => loadInventory())
+                .subscribe();
+        }
+
+        // ============ INIT ============
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                enterDashboard();
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
