@@ -1,5 +1,5 @@
-const CACHE_NAME = 'sst-staff-v1';
-const PRECACHE_URLS = ['dashboard.html', 'style.css', 'manifest.json'];
+const CACHE_NAME = 'sst-staff-v2';
+const PRECACHE_URLS = ['index.html', 'style.css', 'manifest.json', 'dashboard-fix.js'];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -17,7 +17,6 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Network-first so live order data is never served stale; falls back to cache offline.
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     event.respondWith(
