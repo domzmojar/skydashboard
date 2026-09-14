@@ -218,6 +218,7 @@
                 <div id="wi-scan-panel">
                     <div id="wi-reader"></div>
                     <div id="wi-scan-hint">Point the camera at the customer's order QR code</div>
+                    <button class="scan-again-btn" id="wi-scan-toggle-btn" onclick="toggleWalkinScanner()">✖ Close Camera</button>
                 </div>
 
                 <div id="wi-manual-panel">
@@ -515,9 +516,28 @@
             document.getElementById('wi-scan-panel').style.display = mode === 'scan' ? 'block' : 'none';
             document.getElementById('wi-manual-panel').style.display = mode === 'manual' ? 'block' : 'none';
             if (mode === 'scan') {
+                setWalkinScannerUi(true);
                 startWalkinScanner();
             } else {
                 stopWalkinScanner();
+            }
+        }
+
+        function setWalkinScannerUi(active) {
+            document.getElementById('wi-reader').style.display = active ? 'block' : 'none';
+            const btn = document.getElementById('wi-scan-toggle-btn');
+            if (btn) btn.textContent = active ? '✖ Close Camera' : '📷 Open Camera';
+        }
+
+        function toggleWalkinScanner() {
+            if (wiHtml5QrCode) {
+                stopWalkinScanner();
+                setWalkinScannerUi(false);
+                document.getElementById('wi-scan-hint').textContent = 'Camera closed. Tap "Open Camera" to scan again.';
+            } else {
+                setWalkinScannerUi(true);
+                document.getElementById('wi-scan-hint').textContent = "Point the camera at the customer's order QR code";
+                startWalkinScanner();
             }
         }
 
@@ -530,7 +550,8 @@
                 (decodedText) => {
                     lookupWalkinOrder(decodedText);
                     stopWalkinScanner();
-                    document.getElementById('wi-scan-hint').textContent = '✅ Scanned! Tap "Scan QR" again for the next order.';
+                    setWalkinScannerUi(false);
+                    document.getElementById('wi-scan-hint').textContent = '✅ Scanned! Tap "Open Camera" for the next order.';
                 },
                 () => {}
             ).catch(() => {
@@ -633,7 +654,10 @@
             document.getElementById('section-pos').style.display = section === 'pos' ? 'block' : 'none';
 
             // The camera should only ever run while the Walk-ins tab is actually visible.
-            if (section !== 'walkins') stopWalkinScanner();
+            if (section !== 'walkins') {
+                stopWalkinScanner();
+                setWalkinScannerUi(false);
+            }
 
             if (section === 'orders') {
                 renderOrders();
