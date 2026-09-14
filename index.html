@@ -809,7 +809,10 @@
             }
 
             // POS sales are paid and handed over at the counter immediately.
-            await supabaseClient.from('orders').update({ status: 'completed', payment_status: 'paid' }).eq('order_number', data.order_number);
+            // Payment was already collected at the counter, but leave the fulfillment
+            // status as 'pending' so the sale shows up in Active and follows the
+            // normal Accept → Preparing → Ready → Complete workflow like every other order.
+            await supabaseClient.from('orders').update({ payment_status: 'paid' }).eq('order_number', data.order_number);
 
             renderPosReceipt(data.order_number, customerName, posCart, total, posPaymentMethod, exactAmount, amountGiven);
 
@@ -821,7 +824,7 @@
 
             await loadInventory();
             await loadOrders();
-            showToast(`✅ Order ${data.order_number} completed`);
+            showToast(`✅ Order ${data.order_number} sent to Active — mark it ready when prepared`);
         };
 
         function renderPosReceipt(orderNumber, customerName, items, total, paymentMethod, exactAmount, amountGiven) {
@@ -830,17 +833,18 @@
                 ? `<div class="order-total-row"><span>Change</span><span>₱${(amountGiven - total).toFixed(2)}</span></div>`
                 : '';
             document.getElementById('pos-receipt-box').innerHTML = `
-                <div class="order-result status-completed">
+                <div class="order-result">
                     <div class="order-num-big">${orderNumber}</div>
                     <div class="order-customer">👤 ${customerName}</div>
                     <div class="order-items-list">${itemsHtml}</div>
                     <div class="order-total-row"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
                     ${changeLine}
                     <div class="order-badges">
-                        <span class="obadge completed">completed</span>
+                        <span class="obadge pending">pending</span>
                         <span class="obadge paid">paid</span>
                         <span class="obadge" style="background:#eee;color:#555;">${paymentMethod}</span>
                     </div>
+                    <div style="font-size:.8rem;color:var(--text-medium);margin-top:6px;">Find this order in the <strong>Orders</strong> tab (Active) to move it through prep.</div>
                 </div>
                 <button class="scan-again-btn" onclick="resetPosSale()">🔄 New Sale</button>
             `;
