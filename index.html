@@ -31,6 +31,7 @@
         .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
         .dash-header h1 { font-size: 1.2rem; color: var(--primary); }
         .logout-btn { background: none; border: 2px solid #ddd; border-radius: 30px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; color: var(--text-medium); }
+        .logout-btn.notify-on { border-color: #2E7D32; color: #2E7D32; background: #E8F5E9; }
 
         /* SNAPSHOT CARDS */
         .snapshot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 20px; }
@@ -182,7 +183,10 @@
         <div class="container">
             <div class="dash-header">
                 <h1>🍰 Sky Sweet Treats — Dashboard</h1>
-                <button class="logout-btn" onclick="doLogout()">Log out</button>
+                <div style="display:flex;gap:8px;">
+                    <button class="logout-btn" id="notify-btn">🔔 Enable alerts</button>
+                    <button class="logout-btn" onclick="doLogout()">Log out</button>
+                </div>
             </div>
 
             <div class="snapshot-row">
@@ -909,5 +913,6 @@
             });
         }
     </script>
+    <script src="push-notify.js"></script>
 </body>
 </html>

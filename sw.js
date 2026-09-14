@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sst-staff-v5';
+const CACHE_NAME = 'sst-staff-v6';
 const PRECACHE_URLS = ['index.html', 'cashier.html', 'style.css', 'manifest.json', 'dashboard-fix.js'];
 
 self.addEventListener('install', (event) => {
@@ -63,5 +63,41 @@ self.addEventListener('fetch', (event) => {
                 return response;
             })
             .catch(() => caches.match(event.request))
+    );
+});
+
+// ============ WEB PUSH ============
+self.addEventListener('push', (event) => {
+    let payload = { title: 'Sky Sweet Treats', body: 'New order activity.' };
+    if (event.data) {
+        try {
+            payload = event.data.json();
+        } catch (e) {
+            payload = { title: 'Sky Sweet Treats', body: event.data.text() };
+        }
+    }
+
+    const options = {
+        body: payload.body || '',
+        data: payload.data || {},
+        vibrate: [100, 50, 100],
+        tag: (payload.data && payload.data.order_number) || 'sst-new-order',
+        renotify: true
+    };
+
+    event.waitUntil(self.registration.showNotification(payload.title || 'Sky Sweet Treats', options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const targetUrl = (event.notification.data && event.notification.data.url) || 'index.html';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            for (const client of clientList) {
+                if ('focus' in client) return client.focus();
+            }
+            if (clients.openWindow) return clients.openWindow(targetUrl);
+        })
     );
 });
