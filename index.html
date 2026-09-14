@@ -1,66 +1,913 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Track My Order | Sky Sweet Treats</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><link rel="icon" type="image/x-icon" href="images/logo.jpg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Staff Dashboard | Sky Sweet Treats</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF5722">
+    <link rel="icon" type="image/x-icon" href="images/logo.jpg">
     <style>
-        .track-wrap { padding: 20px 0 60px; max-width: 500px; margin: 0 auto; }
-        .track-form { display: flex; gap: 10px; margin-bottom: 25px; }
-        .track-form input { flex: 1; padding: 14px; border: 2px solid #ddd; border-radius: var(--radius-sm); font-family: inherit; font-size: .95rem; text-transform: uppercase; }
-        .track-form input:focus { border-color: var(--primary); outline: none; }
-        .track-form button { background: var(--primary); color: white; border: none; padding: 0 22px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; font-size: .95rem; }
-        .track-form button:hover { background: var(--primary-dark); }
-        .status-card { background: white; border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow); display: none; }
-        .status-card.show { display: block; }
-        .status-order-number { text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
-        .status-total { text-align: center; color: var(--text-medium); margin-bottom: 20px; font-size: .95rem; }
-        .status-steps { display: flex; justify-content: space-between; margin: 25px 0; position: relative; }
-        .status-steps::before { content: ''; position: absolute; top: 16px; left: 8%; right: 8%; height: 3px; background: #eee; z-index: 0; }
-        .status-step { flex: 1; text-align: center; position: relative; z-index: 1; }
-        .status-step .dot { width: 34px; height: 34px; border-radius: 50%; background: #eee; color: #999; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 1rem; border: 3px solid white; box-shadow: 0 0 0 2px #eee; transition: all .3s ease; }
-        .status-step.done .dot { background: var(--secondary); color: white; box-shadow: 0 0 0 2px var(--secondary); }
-        .status-step.current .dot { background: var(--primary); color: white; box-shadow: 0 0 0 2px var(--primary); animation: pulse 2s infinite; }
-        .status-step small { font-size: .7rem; color: var(--text-medium); font-weight: 600; display: block; }
-        .status-cancelled-banner { background: #FFEBEE; color: #C62828; border: 2px solid #FFCDD2; border-radius: var(--radius-sm); padding: 14px; text-align: center; font-weight: 700; margin: 15px 0; }
-        .status-meta { margin-top: 20px; padding-top: 18px; border-top: 1px dashed #ddd; font-size: .88rem; color: var(--text-medium); }
-        .status-meta div { display: flex; justify-content: space-between; padding: 4px 0; }
-        .status-note { background: #FFF3E0; border: 1px solid #FFB74D; border-radius: var(--radius-sm); padding: 12px 15px; margin-top: 15px; font-size: .85rem; color: #E65100; }
-        .track-empty { text-align: center; color: var(--text-light); padding: 30px 10px; }
-        .payment-pill { display: inline-block; padding: 3px 12px; border-radius: 30px; font-size: .72rem; font-weight: 700; text-transform: uppercase; margin-top: 6px; }
-        .pill-unpaid { background: #FFEBEE; color: #C62828; }.pill-awaiting { background: #FFF3E0; color: #E65100; }.pill-paid { background: #E8F5E9; color: #2E7D32; }
-        .live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: .7rem; font-weight: 700; color: #2E7D32; text-transform: uppercase; letter-spacing: .3px; justify-content: center; margin-top: 6px; }
-        .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #2E7D32; animation: pulse-dot 1.5s infinite; }
-        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
-        #notify-btn { display: block; width: 100%; margin-top: 10px; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; color: var(--text-medium); font-family: inherit; font-size: .85rem; }
-        #notify-btn:disabled { opacity: .7; cursor: default; }
+        body { padding-bottom: 40px; }
+        .container { max-width: 800px; }
+
+        /* LOGIN */
+        #login-screen { max-width: 380px; margin: 60px auto; padding: 0 16px; }
+        .login-box { background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); }
+        .login-box h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        .login-box input {
+            width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: var(--radius-sm);
+            margin-bottom: 12px; font-family: inherit; font-size: 0.95rem;
+        }
+        .login-box input:focus { border-color: var(--primary); outline: none; }
+        .login-error { color: #C62828; font-size: 0.85rem; text-align: center; margin-top: 8px; display: none; }
+
+        /* DASHBOARD SHELL */
+        #dash-screen { display: none; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
+        .dash-header h1 { font-size: 1.2rem; color: var(--primary); }
+        .logout-btn { background: none; border: 2px solid #ddd; border-radius: 30px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; color: var(--text-medium); }
+
+        /* SNAPSHOT CARDS */
+        .snapshot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 20px; }
+        .snap-card { background: white; border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; box-shadow: var(--shadow); }
+        .snap-card .num { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .snap-card .lbl { font-size: 0.7rem; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.3px; }
+
+        /* TABS */
+        .dash-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+        .dash-tabs::-webkit-scrollbar { display: none; }
+        .dash-tab {
+            flex-shrink: 0; background: #f1f3f5; border: none; padding: 8px 16px; border-radius: 30px;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-medium);
+        }
+        .dash-tab.active { background: var(--primary); color: white; }
+
+        /* ORDER CARDS */
+        .order-card { background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); }
+        .order-card.status-cancelled { border-left-color: #C62828; opacity: 0.7; }
+        .order-card.status-completed { border-left-color: #2E7D32; }
+        .order-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .order-num { font-weight: 700; color: var(--primary); font-size: 1rem; }
+        .order-time { font-size: 0.72rem; color: var(--text-light); }
+        .order-customer { font-weight: 600; margin-bottom: 4px; }
+        .order-sub { font-size: 0.8rem; color: var(--text-medium); margin-bottom: 8px; }
+        .order-items-list { font-size: 0.85rem; color: var(--text-dark); background: #fafafa; border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; }
+        .order-items-list div { padding: 2px 0; }
+        .order-total-row { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; }
+        .order-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .obadge { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
+        .obadge.pending { background: #FFF3E0; color: #E65100; }
+        .obadge.accepted { background: #E3F2FD; color: #1565C0; }
+        .obadge.preparing { background: #F3E5F5; color: #6A1B9A; }
+        .obadge.ready { background: #E8F5E9; color: #2E7D32; }
+        .obadge.completed { background: #E0E0E0; color: #424242; }
+        .obadge.cancelled { background: #FFEBEE; color: #C62828; }
+        .obadge.unpaid { background: #FFEBEE; color: #C62828; }
+        .obadge.awaiting_confirmation { background: #FFF3E0; color: #E65100; }
+        .obadge.paid { background: #E8F5E9; color: #2E7D32; }
+        .order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn {
+            flex: 1; min-width: 90px; border: none; padding: 10px; border-radius: var(--radius-sm);
+            font-weight: 600; font-size: 0.82rem; cursor: pointer; color: white;
+        }
+        .action-btn.accept { background: #1565C0; }
+        .action-btn.preparing { background: #6A1B9A; }
+        .action-btn.ready { background: #2E7D32; }
+        .action-btn.complete { background: #424242; }
+        .action-btn.cancel { background: #C62828; }
+        .action-btn.paid { background: #2E7D32; }
+        .empty-state { text-align: center; color: var(--text-light); padding: 40px 10px; }
+
+        /* INVENTORY */
+        .inv-row { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+        .inv-name { font-weight: 600; font-size: 0.9rem; }
+        .inv-cat { font-size: 0.72rem; color: var(--text-light); }
+        .inv-stock-controls { display: flex; align-items: center; gap: 8px; }
+        .inv-stock-controls button {
+            width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ddd; background: white;
+            font-weight: bold; cursor: pointer;
+        }
+        .inv-stock-val { min-width: 26px; text-align: center; font-weight: 700; }
+        .inv-stock-val.zero { color: #C62828; }
+
+        /* WALK-IN */
+        .mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .mode-tab { flex: 1; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; font-size: .9rem; cursor: pointer; color: var(--text-medium); }
+        .mode-tab.active { background: var(--primary); color: white; }
+        #wi-scan-panel { display: none; }
+        #wi-reader { width: 100%; border-radius: var(--radius); overflow: hidden; }
+        #wi-scan-hint { text-align: center; color: var(--text-medium); font-size: .85rem; margin-top: 10px; }
+        #wi-manual-panel { display: none; }
+        .manual-form { display: flex; gap: 10px; }
+        .manual-form input { flex: 1; padding: 14px; border: 2px solid #ddd; border-radius: var(--radius-sm); font-family: inherit; font-size: .95rem; text-transform: uppercase; }
+        .manual-form button { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
+        #wi-lookup-empty { text-align: center; color: var(--text-light); padding: 40px 10px; }
+        .order-result { background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); margin-top: 18px; }
+        .order-result.status-cancelled { border-left-color: #C62828; }
+        .order-result.status-completed { border-left-color: #2E7D32; }
+        .order-num-big { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .scan-again-btn { display: block; width: 100%; margin-top: 16px; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; color: var(--text-medium); }
+
+        /* TOP-LEVEL SECTIONS (Online / Walk-ins / POS) */
+        .top-nav { display: flex; gap: 8px; margin-bottom: 16px; }
+        .section-btn { flex: 1; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; font-size: .95rem; cursor: pointer; color: var(--text-medium); }
+        .section-btn.active { background: var(--primary); color: white; }
+        .bottom-nav { display: none; }
+
+        @media (max-width: 640px) {
+            .top-nav { display: none; }
+            body { padding-bottom: 84px; }
+            .bottom-nav {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+                background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+                padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+            }
+            .bottom-nav .section-btn {
+                flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+                background: none; border: none; border-radius: 10px; padding: 6px 4px;
+                font-size: 1.25rem; color: var(--text-medium);
+            }
+            .bottom-nav .section-btn span { font-size: 0.65rem; font-weight: 700; }
+            .bottom-nav .section-btn.active { background: #FFF0E9; color: var(--primary); }
+        }
+
+        /* POS */
+        .pos-catalog { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+        @media (min-width: 640px) { .pos-catalog { grid-template-columns: repeat(3, 1fr); } }
+        .pos-item { background: white; border-radius: var(--radius-sm); padding: 12px; box-shadow: var(--shadow); }
+        .pos-item.out-of-stock { opacity: 0.5; }
+        .pos-item-name { font-weight: 700; font-size: 0.85rem; margin-bottom: 2px; }
+        .pos-item-price { color: var(--primary); font-weight: 700; font-size: 0.85rem; }
+        .pos-item-stock { font-size: 0.68rem; color: var(--text-light); margin-bottom: 8px; }
+        .pos-item select { width: 100%; padding: 6px; margin-bottom: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.75rem; }
+        .pos-item button { width: 100%; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+        .pos-item button:disabled { background: #ccc; cursor: not-allowed; }
+        .pos-cart-box { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+        .pos-cart-box h3 { font-size: 1rem; margin-bottom: 10px; color: var(--primary); }
+        .pos-cart-line { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
+        .pos-cart-line .pos-line-name { font-weight: 600; }
+        .pos-cart-line .pos-line-flavor { font-size: 0.72rem; color: var(--text-light); }
+        .pos-qty-controls { display: flex; align-items: center; gap: 6px; }
+        .pos-qty-controls button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #ddd; background: white; font-weight: bold; cursor: pointer; }
+        .pos-empty-cart { text-align: center; color: var(--text-light); padding: 16px 0; font-size: 0.85rem; }
+        .pos-cart-box input[type="text"], .pos-cart-box input[type="number"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: var(--radius-sm); margin-bottom: 10px; font-family: inherit; font-size: 0.9rem; }
+        .pos-cart-box label { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-medium); margin-bottom: 10px; }
+        #pos-change-due { font-weight: 700; margin-bottom: 10px; font-size: 0.9rem; }
+        #pos-change-due.negative { color: #C62828; }
+        #pos-change-due.positive { color: #2E7D32; }
+        .pos-checkout-btn { width: 100%; background: #2E7D32; color: white; border: none; padding: 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: 1rem; cursor: pointer; }
+        .pos-checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-<header class="app-header"><div class="container header-flex"><img src="images/logo.jpg" alt="Sky Sweet Treats Logo" class="brand-logo" onerror="this.src='https://placehold.co/100x100?text=Sweet'"><div class="brand-text"><h1>Track My Order</h1><p>Enter your order number to check its status 📦</p></div></div></header>
-<main class="container track-wrap">
-    <div class="track-form"><input type="text" id="order-input" placeholder="e.g. SST-260827-001" autocomplete="off"><button onclick="checkStatus()">🔍 Check</button></div>
-    <div id="loading" style="display:none;text-align:center;color:var(--text-light);padding:20px;">⏳ Checking…</div>
-    <div id="track-empty" class="track-empty"><p style="font-size:1.1rem;margin-bottom:8px;">🔎 No order looked up yet</p><p>Your order number was shown right after checkout.</p></div>
-    <div id="status-card" class="status-card"><div class="status-order-number" id="status-order-number"></div><div class="status-total" id="status-total"></div><div class="live-badge"><span class="live-dot"></span> Live — updates automatically</div><button id="notify-btn" onclick="enableCustomerPush()">🔔 Notify me on updates</button><div id="cancelled-banner" class="status-cancelled-banner" style="display:none;">❌ This order was cancelled.</div><div class="status-steps" id="status-steps"></div><div id="status-note-box" class="status-note" style="display:none;"></div><div class="status-meta"><div><span>Payment</span> <span id="status-payment"></span></div><div><span>Order placed</span> <span id="status-created"></span></div><div><span>Last updated</span> <span id="status-updated"></span></div></div></div>
-    <a href="index.html" class="back-to-menu-link" style="display:block;margin-top:25px;">↩️ Back to menu</a>
-</main>
-<div id="toast" class="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const supabaseUrl="https://rmtberbypsjcydomvhvu.supabase.co";
-const supabaseAnonKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGJlcmJ5cHNqY3lkb212aHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTU0NDYsImV4cCI6MjEwMzM5MTQ0Nn0.mgo9Cj8ManeLMF9DVA__7a4iAZ7OmYu81NkAEY7Pov0";
-const supabaseClient=window.supabase.createClient(supabaseUrl,supabaseAnonKey);
-const STEPS=[{key:'pending',label:'Order received',icon:'📝'},{key:'accepted',label:'Confirmed',icon:'✅'},{key:'preparing',label:'Preparing',icon:'👩‍🍳'},{key:'ready',label:'Ready',icon:'📦'},{key:'completed',label:'Completed',icon:'🎉'}];
-let orderChannel=null;
-function showToast(message,duration=2500){const toast=document.getElementById('toast');toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),duration);}
-function renderSteps(status){const container=document.getElementById('status-steps'),cancelled=status==='cancelled',currentIndex=STEPS.findIndex(s=>s.key===status);container.innerHTML=STEPS.map((step,i)=>{let cls='';if(!cancelled){if(i<currentIndex)cls='done';else if(i===currentIndex)cls='current';}return `<div class="status-step ${cls}"><div class="dot">${cls==='done'?'✓':step.icon}</div><small>${step.label}</small></div>`;}).join('');document.getElementById('cancelled-banner').style.display=cancelled?'block':'none';}
-function paymentPill(paymentStatus){const map={unpaid:['pill-unpaid','Unpaid'],awaiting_confirmation:['pill-awaiting','Awaiting confirmation'],paid:['pill-paid','Paid']};const [cls,label]=map[paymentStatus]||['pill-unpaid',paymentStatus];return `<span class="payment-pill ${cls}">${label}</span>`;}
-function formatDate(iso){if(!iso)return '—';return new Date(iso).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
-function subscribeToOrder(orderNumber){if(orderChannel){supabaseClient.removeChannel(orderChannel);orderChannel=null;}orderChannel=supabaseClient.channel(`track:${orderNumber}`).on('postgres_changes',{event:'*',schema:'public',table:'orders',filter:`order_number=eq.${orderNumber}`},()=>checkStatus(true)).subscribe();}
-async function checkStatus(silent=false){const params=new URLSearchParams(window.location.search),raw=silent?document.getElementById('status-order-number').textContent:document.getElementById('order-input').value.trim().toUpperCase(),token=params.get('token')||localStorage.getItem('lastOrderTrackingToken')||'';if(!raw)return showToast('⚠️ Please enter your order number');if(!token){if(!silent)showToast('🔐 Please use the tracking link from your order confirmation.');return;}if(!silent){document.getElementById('status-card').classList.remove('show');document.getElementById('track-empty').style.display='none';document.getElementById('loading').style.display='block';}try{const {data,error}=await supabaseClient.rpc('get_order_status',{p_order_number:raw,p_tracking_token:token});if(!silent)document.getElementById('loading').style.display='none';if(error)throw error;if(!data||data.length===0){if(!silent){document.getElementById('track-empty').style.display='block';document.getElementById('track-empty').innerHTML='<p style="font-size:1.1rem;margin-bottom:8px;">❌ Order not found</p><p>Use the tracking link from your order confirmation.</p>';showToast('❌ Order not found');}return;}const order=data[0];document.getElementById('status-order-number').textContent=order.order_number;document.getElementById('status-total').textContent=`Total: ₱${parseFloat(order.total).toFixed(2)}`;document.getElementById('status-payment').innerHTML=paymentPill(order.payment_status);document.getElementById('status-created').textContent=formatDate(order.created_at);document.getElementById('status-updated').textContent=formatDate(order.updated_at);renderSteps(order.status);document.getElementById('status-note-box').style.display='none';document.getElementById('status-card').classList.add('show');if(!silent)subscribeToOrder(order.order_number);else showToast('🔄 Order status updated!');}catch(err){console.error(err);if(!silent){document.getElementById('loading').style.display='none';document.getElementById('track-empty').style.display='block';showToast('❌ Could not check order status. Try again.');}}}
-document.getElementById('order-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkStatus();});
-window.addEventListener('DOMContentLoaded',()=>{const params=new URLSearchParams(window.location.search),orderParam=params.get('order');if(orderParam){document.getElementById('order-input').value=orderParam;checkStatus();}});
-</script>
-<script src="track-realtime-fix.js"></script>
-<script src="customer-push.js"></script>
-</body></html>
+
+    <!-- LOGIN -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>🔐 Staff Login</h2>
+            <input type="email" id="login-email" placeholder="Email" autocomplete="username">
+            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+            <button class="btn-primary" onclick="doLogin()">Log In</button>
+            <div class="login-error" id="login-error"></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dash-screen">
+        <div class="container">
+            <div class="dash-header">
+                <h1>🍰 Sky Sweet Treats — Dashboard</h1>
+                <button class="logout-btn" onclick="doLogout()">Log out</button>
+            </div>
+
+            <div class="snapshot-row">
+                <div class="snap-card"><div class="num" id="snap-today-orders">0</div><div class="lbl">Orders today</div></div>
+                <div class="snap-card"><div class="num" id="snap-today-sales">₱0</div><div class="lbl">Sales today</div></div>
+                <div class="snap-card"><div class="num" id="snap-pending">0</div><div class="lbl">Needs review</div></div>
+            </div>
+
+            <div class="top-nav" id="top-nav">
+                <button class="section-btn active" data-section="orders">📋 Orders</button>
+                <button class="section-btn" data-section="walkins">🔍 Walk-ins</button>
+                <button class="section-btn" data-section="pos">🛒 POS</button>
+            </div>
+
+            <!-- ONLINE -->
+            <div id="section-orders" class="dash-section">
+                <div class="dash-tabs" id="dash-tabs">
+                    <button class="dash-tab active" data-tab="active">🔥 Active</button>
+                    <button class="dash-tab" data-tab="pending">📝 Pending</button>
+                    <button class="dash-tab" data-tab="completed">✅ Completed</button>
+                    <button class="dash-tab" data-tab="cancelled">❌ Cancelled</button>
+                </div>
+                <div id="orders-panel"></div>
+            </div>
+
+            <!-- WALK-INS (scan / search existing orders) -->
+            <div id="section-walkins" class="dash-section" style="display:none;">
+                <div class="mode-tabs">
+                    <button class="mode-tab active" id="wi-tab-scan" onclick="switchWalkinMode('scan')">📷 Scan QR</button>
+                    <button class="mode-tab" id="wi-tab-manual" onclick="switchWalkinMode('manual')">⌨️ Type Number</button>
+                </div>
+
+                <div id="wi-scan-panel">
+                    <div id="wi-reader"></div>
+                    <div id="wi-scan-hint">Point the camera at the customer's order QR code</div>
+                    <button class="scan-again-btn" id="wi-scan-toggle-btn" onclick="toggleWalkinScanner()">✖ Close Camera</button>
+                </div>
+
+                <div id="wi-manual-panel">
+                    <div class="manual-form">
+                        <input type="text" id="wi-order-input" placeholder="e.g. SST-260827-001" autocomplete="off">
+                        <button onclick="lookupWalkinOrder(document.getElementById('wi-order-input').value)">🔍 Find</button>
+                    </div>
+                </div>
+
+                <div id="wi-lookup-empty">🔎 Scan or type an order number to look it up</div>
+                <div id="wi-order-result-box"></div>
+            </div>
+
+            <!-- POS (ring up a new counter sale) -->
+            <div id="section-pos" class="dash-section" style="display:none;">
+                <div class="mode-tabs">
+                    <button class="mode-tab active" id="pos-tab-sale" onclick="switchPosMode('sale')">🛒 New Sale</button>
+                    <button class="mode-tab" id="pos-tab-inventory" onclick="switchPosMode('inventory')">📦 Inventory</button>
+                </div>
+
+                <div id="pos-sale-panel">
+                    <div id="pos-receipt-box"></div>
+                    <div id="pos-order-form">
+                        <div class="pos-catalog" id="pos-catalog"></div>
+                        <div class="pos-cart-box">
+                            <h3>🧾 Current Sale</h3>
+                            <div id="pos-cart-lines"><div class="pos-empty-cart">No items added yet</div></div>
+                            <div class="order-total-row"><span>Total</span><span id="pos-cart-total">₱0.00</span></div>
+
+                            <input type="text" id="pos-customer-name" placeholder="Customer name (optional)">
+
+                            <div class="mode-tabs">
+                                <button class="mode-tab active" id="pos-pay-cash" onclick="setPosPaymentMethod('CASH')">💵 Cash</button>
+                                <button class="mode-tab" id="pos-pay-gcash" onclick="setPosPaymentMethod('GCASH')">📱 GCash</button>
+                            </div>
+
+                            <div id="pos-cash-fields">
+                                <label><input type="checkbox" id="pos-exact-amount" onchange="renderPosCart()"> Customer paid the exact amount</label>
+                                <input type="number" id="pos-amount-given" placeholder="Amount received (₱)" oninput="renderPosCart()">
+                                <div id="pos-change-due"></div>
+                            </div>
+
+                            <button class="pos-checkout-btn" id="pos-checkout-btn" onclick="submitPosSale()">✅ Complete Sale</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inventory-panel" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV (mobile) -->
+    <div class="bottom-nav" id="bottom-nav">
+        <button class="section-btn active" data-section="orders">📋<span>Orders</span></button>
+        <button class="section-btn" data-section="walkins">🔍<span>Walk-ins</span></button>
+        <button class="section-btn" data-section="pos">🛒<span>POS</span></button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        const supabaseUrl = "https://rmtberbypsjcydomvhvu.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGJlcmJ5cHNqY3lkb212aHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTU0NDYsImV4cCI6MjEwMzM5MTQ0Nn0.mgo9Cj8ManeLMF9DVA__7a4iAZ7OmYu81NkAEY7Pov0";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: true, autoRefreshToken: true }
+        });
+
+        let allOrders = [];
+        let allItemsByOrder = {};
+        let menuItems = [];
+        let currentTab = 'active';
+
+        function showToast(message, duration = 2500) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // ============ AUTH ============
+        async function doLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errBox = document.getElementById('login-error');
+            errBox.style.display = 'none';
+
+            if (!email || !password) {
+                errBox.textContent = 'Please enter email and password';
+                errBox.style.display = 'block';
+                return;
+            }
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                errBox.textContent = '❌ ' + error.message;
+                errBox.style.display = 'block';
+                return;
+            }
+            enterDashboard();
+        }
+
+        async function doLogout() {
+            stopWalkinScanner();
+            await supabaseClient.auth.signOut();
+            document.getElementById('dash-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+        }
+
+        async function enterDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dash-screen').style.display = 'block';
+            await loadOrders();
+            await loadInventory();
+            setupRealtime();
+        }
+
+        // ============ ORDERS ============
+        async function loadOrders() {
+            const { data: orders, error } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(200);
+
+            if (error) { showToast('❌ Could not load orders'); console.error(error); return; }
+            allOrders = orders || [];
+
+            const { data: items, error: itemsErr } = await supabaseClient
+                .from('order_items')
+                .select('*')
+                .in('order_id', allOrders.map(o => o.id).length ? allOrders.map(o => o.id) : ['00000000-0000-0000-0000-000000000000']);
+
+            if (!itemsErr) {
+                allItemsByOrder = {};
+                (items || []).forEach(it => {
+                    if (!allItemsByOrder[it.order_id]) allItemsByOrder[it.order_id] = [];
+                    allItemsByOrder[it.order_id].push(it);
+                });
+            }
+
+            renderSnapshot();
+            renderOrders();
+        }
+
+        function renderSnapshot() {
+            const todayStr = new Date().toDateString();
+            const todayOrders = allOrders.filter(o => new Date(o.created_at).toDateString() === todayStr && o.status !== 'cancelled');
+            const todaySales = todayOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+            const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+
+            document.getElementById('snap-today-orders').textContent = todayOrders.length;
+            document.getElementById('snap-today-sales').textContent = `₱${todaySales.toFixed(0)}`;
+            document.getElementById('snap-pending').textContent = pendingCount;
+        }
+
+        function filteredOrders() {
+            // Unified feed: Delivery, Pick-Up, and Walk-in (self-order QR or POS) all show here.
+            if (currentTab === 'active') return allOrders.filter(o => ['pending', 'accepted', 'preparing', 'ready'].includes(o.status));
+            if (currentTab === 'pending') return allOrders.filter(o => o.status === 'pending');
+            if (currentTab === 'completed') return allOrders.filter(o => o.status === 'completed');
+            if (currentTab === 'cancelled') return allOrders.filter(o => o.status === 'cancelled');
+            return allOrders;
+        }
+
+        function orderSourceLabel(o) {
+            if (o.order_type === 'Delivery') return `🏠 ${o.shipping_zone || ''} — ${o.landmark || ''}`;
+            if (o.order_type === 'Pick-Up') return '🚗 Pick-up';
+            if (o.order_type === 'Walk-in') return '🛍️ Walk-in';
+            return o.order_type || '';
+        }
+
+        function orderActionsHtml(o) {
+            const btns = [];
+            if (o.status === 'pending') {
+                btns.push(`<button class="action-btn accept" onclick="updateStatus('${o.id}','accepted')">✅ Accept</button>`);
+                btns.push(`<button class="action-btn cancel" onclick="updateStatus('${o.id}','cancelled')">❌ Reject</button>`);
+            } else if (o.status === 'accepted') {
+                btns.push(`<button class="action-btn preparing" onclick="updateStatus('${o.id}','preparing')">👩‍🍳 Start Preparing</button>`);
+                btns.push(`<button class="action-btn cancel" onclick="updateStatus('${o.id}','cancelled')">❌ Cancel</button>`);
+            } else if (o.status === 'preparing') {
+                btns.push(`<button class="action-btn ready" onclick="updateStatus('${o.id}','ready')">📦 Mark Ready</button>`);
+            } else if (o.status === 'ready') {
+                btns.push(`<button class="action-btn complete" onclick="updateStatus('${o.id}','completed')">🎉 Complete</button>`);
+            }
+            if (o.payment_status !== 'paid' && o.status !== 'cancelled') {
+                btns.push(`<button class="action-btn paid" onclick="markPaid('${o.id}')">💰 Mark Paid</button>`);
+            }
+            return btns.join('');
+        }
+
+        function renderOrders() {
+            const panel = document.getElementById('orders-panel');
+            const list = filteredOrders();
+
+            if (list.length === 0) {
+                panel.innerHTML = `<div class="empty-state"><p style="font-size:1.1rem;">📭 No orders here</p></div>`;
+                return;
+            }
+
+            panel.innerHTML = list.map(o => {
+                const items = allItemsByOrder[o.id] || [];
+                const itemsHtml = items.map(it => `<div>${it.qty}x ${it.product_name}${it.flavor ? ' (' + it.flavor + ')' : ''} — ₱${(it.price * it.qty).toFixed(2)}</div>`).join('');
+                const time = new Date(o.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="order-card status-${o.status}">
+                        <div class="order-top">
+                            <span class="order-num">${o.order_number}</span>
+                            <span class="order-time">${time}</span>
+                        </div>
+                        <div class="order-customer">👤 ${o.customer_name}</div>
+                        <div class="order-sub">
+                            ${orderSourceLabel(o)}
+                            &nbsp;•&nbsp; ${o.payment_method}
+                        </div>
+                        <div class="order-items-list">${itemsHtml || '<em>No items recorded</em>'}</div>
+                        <div class="order-total-row"><span>Total</span><span>₱${parseFloat(o.total).toFixed(2)}</span></div>
+                        <div class="order-badges">
+                            <span class="obadge ${o.status}">${o.status}</span>
+                            <span class="obadge ${o.payment_status}">${o.payment_status.replace('_',' ')}</span>
+                        </div>
+                        <div class="order-actions">${orderActionsHtml(o)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.updateStatus = async function(orderId, status) {
+            const { error } = await supabaseClient.from('orders').update({ status }).eq('id', orderId);
+            if (error) return showToast('❌ Could not update order');
+            showToast(`✅ Order marked as ${status}`);
+            await loadOrders();
+        };
+
+        window.markPaid = async function(orderId) {
+            const { error } = await supabaseClient.from('orders').update({ payment_status: 'paid' }).eq('id', orderId);
+            if (error) return showToast('❌ Could not update payment status');
+            showToast('💰 Marked as paid');
+            await loadOrders();
+        };
+
+        // ============ INVENTORY ============
+        async function loadInventory() {
+            const { data, error } = await supabaseClient.from('menu_items').select('*').order('sort_order', { ascending: true });
+            if (error) { showToast('❌ Could not load inventory'); return; }
+            menuItems = data || [];
+            renderInventory();
+            renderPosCatalog();
+        }
+
+        function renderInventory() {
+            const panel = document.getElementById('inventory-panel');
+            if (menuItems.length === 0) {
+                panel.innerHTML = `<div class="empty-state"><p>📭 No menu items yet</p></div>`;
+                return;
+            }
+            panel.innerHTML = menuItems.map(p => `
+                <div class="inv-row">
+                    <div>
+                        <div class="inv-name">${p.name}</div>
+                        <div class="inv-cat">${p.category}</div>
+                    </div>
+                    <div class="inv-stock-controls">
+                        <button onclick="changeStock('${p.id}', -1)">−</button>
+                        <span class="inv-stock-val ${p.stock <= 0 ? 'zero' : ''}" id="stock-${p.id}">${p.stock}</span>
+                        <button onclick="changeStock('${p.id}', 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.changeStock = async function(id, delta) {
+            const item = menuItems.find(p => p.id === id);
+            if (!item) return;
+            const newStock = Math.max(0, item.stock + delta);
+            const { error } = await supabaseClient.from('menu_items').update({ stock: newStock }).eq('id', id);
+            if (error) return showToast('❌ Could not update stock');
+            item.stock = newStock;
+            const el = document.getElementById(`stock-${id}`);
+            el.textContent = newStock;
+            el.classList.toggle('zero', newStock <= 0);
+            renderPosCatalog();
+        };
+
+        // ============ WALK-IN (SCAN / SEARCH) ============
+        let wiHtml5QrCode = null;
+        let wiCurrentOrder = null;
+
+        function switchWalkinMode(mode) {
+            document.getElementById('wi-tab-scan').classList.toggle('active', mode === 'scan');
+            document.getElementById('wi-tab-manual').classList.toggle('active', mode === 'manual');
+            document.getElementById('wi-scan-panel').style.display = mode === 'scan' ? 'block' : 'none';
+            document.getElementById('wi-manual-panel').style.display = mode === 'manual' ? 'block' : 'none';
+            if (mode === 'scan') {
+                setWalkinScannerUi(true);
+                startWalkinScanner();
+            } else {
+                stopWalkinScanner();
+            }
+        }
+
+        function setWalkinScannerUi(active) {
+            document.getElementById('wi-reader').style.display = active ? 'block' : 'none';
+            const btn = document.getElementById('wi-scan-toggle-btn');
+            if (btn) btn.textContent = active ? '✖ Close Camera' : '📷 Open Camera';
+        }
+
+        function toggleWalkinScanner() {
+            if (wiHtml5QrCode) {
+                stopWalkinScanner();
+                setWalkinScannerUi(false);
+                document.getElementById('wi-scan-hint').textContent = 'Camera closed. Tap "Open Camera" to scan again.';
+            } else {
+                setWalkinScannerUi(true);
+                document.getElementById('wi-scan-hint').textContent = "Point the camera at the customer's order QR code";
+                startWalkinScanner();
+            }
+        }
+
+        function startWalkinScanner() {
+            if (wiHtml5QrCode) return;
+            wiHtml5QrCode = new Html5Qrcode("wi-reader");
+            wiHtml5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    lookupWalkinOrder(decodedText);
+                    stopWalkinScanner();
+                    setWalkinScannerUi(false);
+                    document.getElementById('wi-scan-hint').textContent = '✅ Scanned! Tap "Open Camera" for the next order.';
+                },
+                () => {}
+            ).catch(() => {
+                document.getElementById('wi-scan-hint').textContent = '⚠️ Camera unavailable — use "Type Number" instead.';
+            });
+        }
+
+        function stopWalkinScanner() {
+            if (wiHtml5QrCode) {
+                wiHtml5QrCode.stop().then(() => wiHtml5QrCode.clear()).catch(() => {});
+                wiHtml5QrCode = null;
+            }
+        }
+
+        window.lookupWalkinOrder = async function(rawInput) {
+            const orderNumber = (rawInput || '').trim().toUpperCase();
+            if (!orderNumber) return showToast('⚠️ Enter or scan an order number');
+
+            const { data: orders, error } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .eq('order_number', orderNumber)
+                .limit(1);
+
+            if (error) { showToast('❌ Lookup failed'); console.error(error); return; }
+            if (!orders || orders.length === 0) {
+                document.getElementById('wi-order-result-box').innerHTML = '';
+                document.getElementById('wi-lookup-empty').style.display = 'block';
+                document.getElementById('wi-lookup-empty').textContent = '❌ Order not found: ' + orderNumber;
+                return showToast('❌ Order not found');
+            }
+
+            wiCurrentOrder = orders[0];
+
+            const { data: items, error: itemsErr } = await supabaseClient
+                .from('order_items')
+                .select('*')
+                .eq('order_id', wiCurrentOrder.id);
+
+            renderWalkinOrder(wiCurrentOrder, itemsErr ? [] : (items || []));
+            document.getElementById('wi-lookup-empty').style.display = 'none';
+        };
+
+        function renderWalkinOrder(o, items) {
+            const itemsHtml = items.map(it =>
+                `<div>${it.qty}x ${it.product_name}${it.flavor ? ' (' + it.flavor + ')' : ''} — ₱${(it.price * it.qty).toFixed(2)}</div>`
+            ).join('');
+            const time = new Date(o.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('wi-order-result-box').innerHTML = `
+                <div class="order-result status-${o.status}">
+                    <div class="order-num-big">${o.order_number}</div>
+                    <div style="font-size:.75rem;color:var(--text-light);">${time}</div>
+                    <div class="order-customer">👤 ${o.customer_name}</div>
+                    <div class="order-items-list">${itemsHtml || '<em>No items recorded</em>'}</div>
+                    <div class="order-total-row"><span>Total</span><span>₱${parseFloat(o.total).toFixed(2)}</span></div>
+                    <div class="order-badges">
+                        <span class="obadge ${o.status}">${o.status}</span>
+                        <span class="obadge ${o.payment_status}">${o.payment_status.replace('_',' ')}</span>
+                        <span class="obadge" style="background:#eee;color:#555;">${o.payment_method}</span>
+                    </div>
+                    <div class="order-actions">${orderActionsHtml(o)}</div>
+                </div>
+                <button class="scan-again-btn" onclick="resetWalkinLookup()">🔄 Next customer</button>
+            `;
+        }
+
+        window.resetWalkinLookup = function() {
+            wiCurrentOrder = null;
+            document.getElementById('wi-order-result-box').innerHTML = '';
+            const input = document.getElementById('wi-order-input');
+            if (input) input.value = '';
+            document.getElementById('wi-lookup-empty').style.display = 'block';
+            document.getElementById('wi-lookup-empty').textContent = '🔎 Scan or type an order number to look it up';
+            if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
+        };
+
+        document.getElementById('wi-order-input')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') lookupWalkinOrder(e.target.value);
+        });
+
+        // ============ ONLINE SUB-TABS ============
+        document.getElementById('dash-tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.dash-tab');
+            if (!btn) return;
+            document.querySelectorAll('#dash-tabs .dash-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            currentTab = btn.dataset.tab;
+            renderOrders();
+        });
+
+        // ============ TOP-LEVEL SECTIONS (Online / Walk-ins / POS) ============
+        let currentSection = 'orders';
+
+        function switchSection(section) {
+            currentSection = section;
+            document.querySelectorAll('.section-btn').forEach(b => b.classList.toggle('active', b.dataset.section === section));
+            document.getElementById('section-orders').style.display = section === 'orders' ? 'block' : 'none';
+            document.getElementById('section-walkins').style.display = section === 'walkins' ? 'block' : 'none';
+            document.getElementById('section-pos').style.display = section === 'pos' ? 'block' : 'none';
+
+            // The camera should only ever run while the Walk-ins tab is actually visible.
+            if (section !== 'walkins') {
+                stopWalkinScanner();
+                setWalkinScannerUi(false);
+            }
+
+            if (section === 'orders') {
+                renderOrders();
+            } else if (section === 'walkins') {
+                if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
+            } else if (section === 'pos') {
+                renderPosCatalog();
+            }
+        }
+
+        document.querySelectorAll('.section-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchSection(btn.dataset.section));
+        });
+
+        // ============ POS ============
+        let posMode = 'sale';
+        let posCart = []; // { product_id, name, price, flavor, qty, stock }
+        let posPaymentMethod = 'CASH';
+
+        function switchPosMode(mode) {
+            posMode = mode;
+            document.getElementById('pos-tab-sale').classList.toggle('active', mode === 'sale');
+            document.getElementById('pos-tab-inventory').classList.toggle('active', mode === 'inventory');
+            document.getElementById('pos-sale-panel').style.display = mode === 'sale' ? 'block' : 'none';
+            document.getElementById('inventory-panel').style.display = mode === 'inventory' ? 'block' : 'none';
+        }
+
+        function renderPosCatalog() {
+            const panel = document.getElementById('pos-catalog');
+            if (!menuItems.length) {
+                panel.innerHTML = `<div class="empty-state">📭 No menu items yet</div>`;
+                return;
+            }
+            panel.innerHTML = menuItems.map(p => {
+                const outOfStock = p.stock <= 0;
+                const flavors = (p.variant_options || []).filter(f => !(p.unavailable_flavors || []).includes(f));
+                const selectId = `pos-flavor-${p.id}`;
+                const flavorSelect = flavors.length
+                    ? `<select id="${selectId}">${flavors.map(f => `<option value="${f}">${f}</option>`).join('')}</select>`
+                    : '';
+                return `
+                    <div class="pos-item ${outOfStock ? 'out-of-stock' : ''}">
+                        <div class="pos-item-name">${p.name}</div>
+                        <div class="pos-item-price">₱${parseFloat(p.price).toFixed(2)}</div>
+                        <div class="pos-item-stock">${outOfStock ? 'Out of stock' : p.stock + ' in stock'}</div>
+                        ${flavorSelect}
+                        <button ${outOfStock ? 'disabled' : ''} onclick="addToPosCart('${p.id}', ${flavors.length ? `document.getElementById('${selectId}').value` : 'null'})">+ Add</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.addToPosCart = function(productId, flavor) {
+            const item = menuItems.find(p => p.id === productId);
+            if (!item) return;
+            const existing = posCart.find(c => c.product_id === productId && c.flavor === flavor);
+            if (existing) {
+                if (existing.qty >= item.stock) return showToast('⚠️ No more stock available');
+                existing.qty += 1;
+            } else {
+                if (item.stock <= 0) return showToast('⚠️ Out of stock');
+                posCart.push({ product_id: productId, name: item.name, price: parseFloat(item.price), flavor: flavor || null, qty: 1, stock: item.stock });
+            }
+            renderPosCart();
+        };
+
+        window.changePosCartQty = function(index, delta) {
+            const line = posCart[index];
+            if (!line) return;
+            line.qty += delta;
+            if (line.qty <= 0) {
+                posCart.splice(index, 1);
+            } else if (line.qty > line.stock) {
+                line.qty = line.stock;
+                showToast('⚠️ No more stock available');
+            }
+            renderPosCart();
+        };
+
+        function posCartTotal() {
+            return posCart.reduce((sum, c) => sum + c.price * c.qty, 0);
+        }
+
+        function setPosPaymentMethod(method) {
+            posPaymentMethod = method;
+            document.getElementById('pos-pay-cash').classList.toggle('active', method === 'CASH');
+            document.getElementById('pos-pay-gcash').classList.toggle('active', method === 'GCASH');
+            document.getElementById('pos-cash-fields').style.display = method === 'CASH' ? 'block' : 'none';
+            renderPosCart();
+        }
+
+        function renderPosCart() {
+            const linesBox = document.getElementById('pos-cart-lines');
+            if (posCart.length === 0) {
+                linesBox.innerHTML = `<div class="pos-empty-cart">No items added yet</div>`;
+            } else {
+                linesBox.innerHTML = posCart.map((c, i) => `
+                    <div class="pos-cart-line">
+                        <div>
+                            <div class="pos-line-name">${c.name}</div>
+                            ${c.flavor ? `<div class="pos-line-flavor">${c.flavor}</div>` : ''}
+                        </div>
+                        <div class="pos-qty-controls">
+                            <button onclick="changePosCartQty(${i}, -1)">−</button>
+                            <span>${c.qty}</span>
+                            <button onclick="changePosCartQty(${i}, 1)">+</button>
+                            <span style="min-width:60px;text-align:right;">₱${(c.price * c.qty).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const total = posCartTotal();
+            document.getElementById('pos-cart-total').textContent = `₱${total.toFixed(2)}`;
+
+            const exactChecked = document.getElementById('pos-exact-amount').checked;
+            const amountInput = document.getElementById('pos-amount-given');
+            amountInput.disabled = exactChecked;
+            const changeBox = document.getElementById('pos-change-due');
+
+            if (posPaymentMethod !== 'CASH' || exactChecked) {
+                changeBox.textContent = '';
+                changeBox.className = '';
+            } else {
+                const given = parseFloat(amountInput.value) || 0;
+                const change = given - total;
+                changeBox.textContent = change >= 0 ? `Change: ₱${change.toFixed(2)}` : `Short by ₱${Math.abs(change).toFixed(2)}`;
+                changeBox.className = change >= 0 ? 'positive' : 'negative';
+            }
+        }
+
+        window.submitPosSale = async function() {
+            const total = posCartTotal();
+            if (posCart.length === 0) return showToast('⚠️ Add at least one item');
+
+            let exactAmount = null, amountGiven = null;
+            if (posPaymentMethod === 'CASH') {
+                exactAmount = document.getElementById('pos-exact-amount').checked;
+                if (!exactAmount) {
+                    amountGiven = parseFloat(document.getElementById('pos-amount-given').value);
+                    if (!amountGiven || amountGiven < total) return showToast('⚠️ Amount received is less than the total');
+                }
+            }
+
+            const customerName = document.getElementById('pos-customer-name').value.trim() || 'Walk-in Customer';
+            const btn = document.getElementById('pos-checkout-btn');
+            btn.disabled = true;
+            btn.textContent = 'Processing…';
+
+            const { data, error } = await supabaseClient.rpc('place_order', {
+                p_customer_name: customerName,
+                p_customer_phone: null,
+                p_order_type: 'Walk-in',
+                p_landmark: null,
+                p_shipping_zone: null,
+                p_shipping_fee: 0,
+                p_payment_method: posPaymentMethod,
+                p_exact_amount: exactAmount,
+                p_amount_given: amountGiven,
+                p_change_due: null,
+                p_subtotal: total,
+                p_total: total,
+                p_items: posCart.map(c => ({ product_id: c.product_id, qty: c.qty, flavor: c.flavor })),
+                p_tracking_token: crypto.randomUUID()
+            });
+
+            btn.disabled = false;
+            btn.textContent = '✅ Complete Sale';
+
+            if (error) {
+                console.error(error);
+                return showToast('❌ ' + (error.message || 'Could not place order'));
+            }
+
+            // POS sales are paid and handed over at the counter immediately.
+            // Payment was already collected at the counter, but leave the fulfillment
+            // status as 'pending' so the sale shows up in Active and follows the
+            // normal Accept → Preparing → Ready → Complete workflow like every other order.
+            await supabaseClient.from('orders').update({ payment_status: 'paid' }).eq('order_number', data.order_number);
+
+            renderPosReceipt(data.order_number, customerName, posCart, total, posPaymentMethod, exactAmount, amountGiven);
+
+            posCart = [];
+            document.getElementById('pos-customer-name').value = '';
+            document.getElementById('pos-amount-given').value = '';
+            document.getElementById('pos-exact-amount').checked = false;
+            document.getElementById('pos-order-form').style.display = 'none';
+
+            await loadInventory();
+            await loadOrders();
+            showToast(`✅ Order ${data.order_number} sent to Active — mark it ready when prepared`);
+        };
+
+        function renderPosReceipt(orderNumber, customerName, items, total, paymentMethod, exactAmount, amountGiven) {
+            const itemsHtml = items.map(c => `<div>${c.qty}x ${c.name}${c.flavor ? ' (' + c.flavor + ')' : ''} — ₱${(c.price * c.qty).toFixed(2)}</div>`).join('');
+            const changeLine = paymentMethod === 'CASH' && !exactAmount
+                ? `<div class="order-total-row"><span>Change</span><span>₱${(amountGiven - total).toFixed(2)}</span></div>`
+                : '';
+            document.getElementById('pos-receipt-box').innerHTML = `
+                <div class="order-result">
+                    <div class="order-num-big">${orderNumber}</div>
+                    <div class="order-customer">👤 ${customerName}</div>
+                    <div class="order-items-list">${itemsHtml}</div>
+                    <div class="order-total-row"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
+                    ${changeLine}
+                    <div class="order-badges">
+                        <span class="obadge pending">pending</span>
+                        <span class="obadge paid">paid</span>
+                        <span class="obadge" style="background:#eee;color:#555;">${paymentMethod}</span>
+                    </div>
+                    <div style="font-size:.8rem;color:var(--text-medium);margin-top:6px;">Find this order in the <strong>Orders</strong> tab (Active) to move it through prep.</div>
+                </div>
+                <button class="scan-again-btn" onclick="resetPosSale()">🔄 New Sale</button>
+            `;
+        }
+
+        window.resetPosSale = function() {
+            document.getElementById('pos-receipt-box').innerHTML = '';
+            document.getElementById('pos-order-form').style.display = 'block';
+            renderPosCatalog();
+            renderPosCart();
+        };
+
+        // ============ REALTIME ============
+        function setupRealtime() {
+            supabaseClient
+                .channel('staff:orders')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadOrders())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => loadOrders())
+                .subscribe();
+
+            supabaseClient
+                .channel('staff:menu_items')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => loadInventory())
+                .subscribe();
+        }
+
+        // ============ INIT ============
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                enterDashboard();
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
