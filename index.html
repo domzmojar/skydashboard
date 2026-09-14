@@ -112,6 +112,56 @@
         .order-result.status-completed { border-left-color: #2E7D32; }
         .order-num-big { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
         .scan-again-btn { display: block; width: 100%; margin-top: 16px; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; color: var(--text-medium); }
+
+        /* TOP-LEVEL SECTIONS (Online / Walk-ins / POS) */
+        .top-nav { display: flex; gap: 8px; margin-bottom: 16px; }
+        .section-btn { flex: 1; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; font-size: .95rem; cursor: pointer; color: var(--text-medium); }
+        .section-btn.active { background: var(--primary); color: white; }
+        .bottom-nav { display: none; }
+
+        @media (max-width: 640px) {
+            .top-nav { display: none; }
+            body { padding-bottom: 84px; }
+            .bottom-nav {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+                background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+                padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+            }
+            .bottom-nav .section-btn {
+                flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+                background: none; border: none; border-radius: 10px; padding: 6px 4px;
+                font-size: 1.25rem; color: var(--text-medium);
+            }
+            .bottom-nav .section-btn span { font-size: 0.65rem; font-weight: 700; }
+            .bottom-nav .section-btn.active { background: #FFF0E9; color: var(--primary); }
+        }
+
+        /* POS */
+        .pos-catalog { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+        @media (min-width: 640px) { .pos-catalog { grid-template-columns: repeat(3, 1fr); } }
+        .pos-item { background: white; border-radius: var(--radius-sm); padding: 12px; box-shadow: var(--shadow); }
+        .pos-item.out-of-stock { opacity: 0.5; }
+        .pos-item-name { font-weight: 700; font-size: 0.85rem; margin-bottom: 2px; }
+        .pos-item-price { color: var(--primary); font-weight: 700; font-size: 0.85rem; }
+        .pos-item-stock { font-size: 0.68rem; color: var(--text-light); margin-bottom: 8px; }
+        .pos-item select { width: 100%; padding: 6px; margin-bottom: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.75rem; }
+        .pos-item button { width: 100%; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+        .pos-item button:disabled { background: #ccc; cursor: not-allowed; }
+        .pos-cart-box { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+        .pos-cart-box h3 { font-size: 1rem; margin-bottom: 10px; color: var(--primary); }
+        .pos-cart-line { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
+        .pos-cart-line .pos-line-name { font-weight: 600; }
+        .pos-cart-line .pos-line-flavor { font-size: 0.72rem; color: var(--text-light); }
+        .pos-qty-controls { display: flex; align-items: center; gap: 6px; }
+        .pos-qty-controls button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #ddd; background: white; font-weight: bold; cursor: pointer; }
+        .pos-empty-cart { text-align: center; color: var(--text-light); padding: 16px 0; font-size: 0.85rem; }
+        .pos-cart-box input[type="text"], .pos-cart-box input[type="number"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: var(--radius-sm); margin-bottom: 10px; font-family: inherit; font-size: 0.9rem; }
+        .pos-cart-box label { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-medium); margin-bottom: 10px; }
+        #pos-change-due { font-weight: 700; margin-bottom: 10px; font-size: 0.9rem; }
+        #pos-change-due.negative { color: #C62828; }
+        #pos-change-due.positive { color: #2E7D32; }
+        .pos-checkout-btn { width: 100%; background: #2E7D32; color: white; border: none; padding: 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: 1rem; cursor: pointer; }
+        .pos-checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -141,19 +191,25 @@
                 <div class="snap-card"><div class="num" id="snap-pending">0</div><div class="lbl">Needs review</div></div>
             </div>
 
-            <div class="dash-tabs" id="dash-tabs">
-                <button class="dash-tab active" data-tab="active">🔥 Active</button>
-                <button class="dash-tab" data-tab="pending">📝 Pending</button>
-                <button class="dash-tab" data-tab="completed">✅ Completed</button>
-                <button class="dash-tab" data-tab="cancelled">❌ Cancelled</button>
-                <button class="dash-tab" data-tab="inventory">📦 Inventory</button>
-                <button class="dash-tab" data-tab="walkin">🔍 Walk-in</button>
+            <div class="top-nav" id="top-nav">
+                <button class="section-btn active" data-section="online">🌐 Online</button>
+                <button class="section-btn" data-section="walkins">🔍 Walk-ins</button>
+                <button class="section-btn" data-section="pos">🛒 POS</button>
             </div>
 
-            <div id="orders-panel"></div>
-            <div id="inventory-panel" style="display:none;"></div>
+            <!-- ONLINE -->
+            <div id="section-online" class="dash-section">
+                <div class="dash-tabs" id="dash-tabs">
+                    <button class="dash-tab active" data-tab="active">🔥 Active</button>
+                    <button class="dash-tab" data-tab="pending">📝 Pending</button>
+                    <button class="dash-tab" data-tab="completed">✅ Completed</button>
+                    <button class="dash-tab" data-tab="cancelled">❌ Cancelled</button>
+                </div>
+                <div id="orders-panel"></div>
+            </div>
 
-            <div id="walkin-panel" style="display:none;">
+            <!-- WALK-INS (scan / search existing orders) -->
+            <div id="section-walkins" class="dash-section" style="display:none;">
                 <div class="mode-tabs">
                     <button class="mode-tab active" id="wi-tab-scan" onclick="switchWalkinMode('scan')">📷 Scan QR</button>
                     <button class="mode-tab" id="wi-tab-manual" onclick="switchWalkinMode('manual')">⌨️ Type Number</button>
@@ -174,7 +230,51 @@
                 <div id="wi-lookup-empty">🔎 Scan or type an order number to look it up</div>
                 <div id="wi-order-result-box"></div>
             </div>
+
+            <!-- POS (ring up a new counter sale) -->
+            <div id="section-pos" class="dash-section" style="display:none;">
+                <div class="mode-tabs">
+                    <button class="mode-tab active" id="pos-tab-sale" onclick="switchPosMode('sale')">🛒 New Sale</button>
+                    <button class="mode-tab" id="pos-tab-inventory" onclick="switchPosMode('inventory')">📦 Inventory</button>
+                </div>
+
+                <div id="pos-sale-panel">
+                    <div id="pos-receipt-box"></div>
+                    <div id="pos-order-form">
+                        <div class="pos-catalog" id="pos-catalog"></div>
+                        <div class="pos-cart-box">
+                            <h3>🧾 Current Sale</h3>
+                            <div id="pos-cart-lines"><div class="pos-empty-cart">No items added yet</div></div>
+                            <div class="order-total-row"><span>Total</span><span id="pos-cart-total">₱0.00</span></div>
+
+                            <input type="text" id="pos-customer-name" placeholder="Customer name (optional)">
+
+                            <div class="mode-tabs">
+                                <button class="mode-tab active" id="pos-pay-cash" onclick="setPosPaymentMethod('CASH')">💵 Cash</button>
+                                <button class="mode-tab" id="pos-pay-gcash" onclick="setPosPaymentMethod('GCASH')">📱 GCash</button>
+                            </div>
+
+                            <div id="pos-cash-fields">
+                                <label><input type="checkbox" id="pos-exact-amount" onchange="renderPosCart()"> Customer paid the exact amount</label>
+                                <input type="number" id="pos-amount-given" placeholder="Amount received (₱)" oninput="renderPosCart()">
+                                <div id="pos-change-due"></div>
+                            </div>
+
+                            <button class="pos-checkout-btn" id="pos-checkout-btn" onclick="submitPosSale()">✅ Complete Sale</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inventory-panel" style="display:none;"></div>
+            </div>
         </div>
+    </div>
+
+    <!-- BOTTOM NAV (mobile) -->
+    <div class="bottom-nav" id="bottom-nav">
+        <button class="section-btn active" data-section="online">🌐<span>Online</span></button>
+        <button class="section-btn" data-section="walkins">🔍<span>Walk-ins</span></button>
+        <button class="section-btn" data-section="pos">🛒<span>POS</span></button>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -277,11 +377,13 @@
         }
 
         function filteredOrders() {
-            if (currentTab === 'active') return allOrders.filter(o => ['pending', 'accepted', 'preparing', 'ready'].includes(o.status));
-            if (currentTab === 'pending') return allOrders.filter(o => o.status === 'pending');
-            if (currentTab === 'completed') return allOrders.filter(o => o.status === 'completed');
-            if (currentTab === 'cancelled') return allOrders.filter(o => o.status === 'cancelled');
-            return allOrders;
+            // "Online" only covers Delivery / Pick-Up. Walk-in sales live under POS/Walk-ins.
+            const base = allOrders.filter(o => o.order_type !== 'Walk-in');
+            if (currentTab === 'active') return base.filter(o => ['pending', 'accepted', 'preparing', 'ready'].includes(o.status));
+            if (currentTab === 'pending') return base.filter(o => o.status === 'pending');
+            if (currentTab === 'completed') return base.filter(o => o.status === 'completed');
+            if (currentTab === 'cancelled') return base.filter(o => o.status === 'cancelled');
+            return base;
         }
 
         function orderActionsHtml(o) {
@@ -360,6 +462,7 @@
             if (error) { showToast('❌ Could not load inventory'); return; }
             menuItems = data || [];
             renderInventory();
+            renderPosCatalog();
         }
 
         function renderInventory() {
@@ -393,6 +496,7 @@
             const el = document.getElementById(`stock-${id}`);
             el.textContent = newStock;
             el.classList.toggle('zero', newStock <= 0);
+            renderPosCatalog();
         };
 
         // ============ WALK-IN (SCAN / SEARCH) ============
@@ -502,37 +606,246 @@
             if (e.key === 'Enter') lookupWalkinOrder(e.target.value);
         });
 
-        // ============ TABS ============
+        // ============ ONLINE SUB-TABS ============
         document.getElementById('dash-tabs').addEventListener('click', (e) => {
             const btn = e.target.closest('.dash-tab');
             if (!btn) return;
-            document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#dash-tabs .dash-tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
             currentTab = btn.dataset.tab;
-
-            const ordersPanel = document.getElementById('orders-panel');
-            const invPanel = document.getElementById('inventory-panel');
-            const walkinPanel = document.getElementById('walkin-panel');
-
-            // Leaving walk-in: always stop the camera so it doesn't run in the background.
-            if (currentTab !== 'walkin') stopWalkinScanner();
-
-            if (currentTab === 'inventory') {
-                ordersPanel.style.display = 'none';
-                invPanel.style.display = 'block';
-                walkinPanel.style.display = 'none';
-            } else if (currentTab === 'walkin') {
-                ordersPanel.style.display = 'none';
-                invPanel.style.display = 'none';
-                walkinPanel.style.display = 'block';
-                if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
-            } else {
-                ordersPanel.style.display = 'block';
-                invPanel.style.display = 'none';
-                walkinPanel.style.display = 'none';
-                renderOrders();
-            }
+            renderOrders();
         });
+
+        // ============ TOP-LEVEL SECTIONS (Online / Walk-ins / POS) ============
+        let currentSection = 'online';
+
+        function switchSection(section) {
+            currentSection = section;
+            document.querySelectorAll('.section-btn').forEach(b => b.classList.toggle('active', b.dataset.section === section));
+            document.getElementById('section-online').style.display = section === 'online' ? 'block' : 'none';
+            document.getElementById('section-walkins').style.display = section === 'walkins' ? 'block' : 'none';
+            document.getElementById('section-pos').style.display = section === 'pos' ? 'block' : 'none';
+
+            // The camera should only ever run while the Walk-ins tab is actually visible.
+            if (section !== 'walkins') stopWalkinScanner();
+
+            if (section === 'online') {
+                renderOrders();
+            } else if (section === 'walkins') {
+                if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
+            } else if (section === 'pos') {
+                renderPosCatalog();
+            }
+        }
+
+        document.querySelectorAll('.section-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchSection(btn.dataset.section));
+        });
+
+        // ============ POS ============
+        let posMode = 'sale';
+        let posCart = []; // { product_id, name, price, flavor, qty, stock }
+        let posPaymentMethod = 'CASH';
+
+        function switchPosMode(mode) {
+            posMode = mode;
+            document.getElementById('pos-tab-sale').classList.toggle('active', mode === 'sale');
+            document.getElementById('pos-tab-inventory').classList.toggle('active', mode === 'inventory');
+            document.getElementById('pos-sale-panel').style.display = mode === 'sale' ? 'block' : 'none';
+            document.getElementById('inventory-panel').style.display = mode === 'inventory' ? 'block' : 'none';
+        }
+
+        function renderPosCatalog() {
+            const panel = document.getElementById('pos-catalog');
+            if (!menuItems.length) {
+                panel.innerHTML = `<div class="empty-state">📭 No menu items yet</div>`;
+                return;
+            }
+            panel.innerHTML = menuItems.map(p => {
+                const outOfStock = p.stock <= 0;
+                const flavors = (p.variant_options || []).filter(f => !(p.unavailable_flavors || []).includes(f));
+                const selectId = `pos-flavor-${p.id}`;
+                const flavorSelect = flavors.length
+                    ? `<select id="${selectId}">${flavors.map(f => `<option value="${f}">${f}</option>`).join('')}</select>`
+                    : '';
+                return `
+                    <div class="pos-item ${outOfStock ? 'out-of-stock' : ''}">
+                        <div class="pos-item-name">${p.name}</div>
+                        <div class="pos-item-price">₱${parseFloat(p.price).toFixed(2)}</div>
+                        <div class="pos-item-stock">${outOfStock ? 'Out of stock' : p.stock + ' in stock'}</div>
+                        ${flavorSelect}
+                        <button ${outOfStock ? 'disabled' : ''} onclick="addToPosCart('${p.id}', ${flavors.length ? `document.getElementById('${selectId}').value` : 'null'})">+ Add</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.addToPosCart = function(productId, flavor) {
+            const item = menuItems.find(p => p.id === productId);
+            if (!item) return;
+            const existing = posCart.find(c => c.product_id === productId && c.flavor === flavor);
+            if (existing) {
+                if (existing.qty >= item.stock) return showToast('⚠️ No more stock available');
+                existing.qty += 1;
+            } else {
+                if (item.stock <= 0) return showToast('⚠️ Out of stock');
+                posCart.push({ product_id: productId, name: item.name, price: parseFloat(item.price), flavor: flavor || null, qty: 1, stock: item.stock });
+            }
+            renderPosCart();
+        };
+
+        window.changePosCartQty = function(index, delta) {
+            const line = posCart[index];
+            if (!line) return;
+            line.qty += delta;
+            if (line.qty <= 0) {
+                posCart.splice(index, 1);
+            } else if (line.qty > line.stock) {
+                line.qty = line.stock;
+                showToast('⚠️ No more stock available');
+            }
+            renderPosCart();
+        };
+
+        function posCartTotal() {
+            return posCart.reduce((sum, c) => sum + c.price * c.qty, 0);
+        }
+
+        function setPosPaymentMethod(method) {
+            posPaymentMethod = method;
+            document.getElementById('pos-pay-cash').classList.toggle('active', method === 'CASH');
+            document.getElementById('pos-pay-gcash').classList.toggle('active', method === 'GCASH');
+            document.getElementById('pos-cash-fields').style.display = method === 'CASH' ? 'block' : 'none';
+            renderPosCart();
+        }
+
+        function renderPosCart() {
+            const linesBox = document.getElementById('pos-cart-lines');
+            if (posCart.length === 0) {
+                linesBox.innerHTML = `<div class="pos-empty-cart">No items added yet</div>`;
+            } else {
+                linesBox.innerHTML = posCart.map((c, i) => `
+                    <div class="pos-cart-line">
+                        <div>
+                            <div class="pos-line-name">${c.name}</div>
+                            ${c.flavor ? `<div class="pos-line-flavor">${c.flavor}</div>` : ''}
+                        </div>
+                        <div class="pos-qty-controls">
+                            <button onclick="changePosCartQty(${i}, -1)">−</button>
+                            <span>${c.qty}</span>
+                            <button onclick="changePosCartQty(${i}, 1)">+</button>
+                            <span style="min-width:60px;text-align:right;">₱${(c.price * c.qty).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const total = posCartTotal();
+            document.getElementById('pos-cart-total').textContent = `₱${total.toFixed(2)}`;
+
+            const exactChecked = document.getElementById('pos-exact-amount').checked;
+            const amountInput = document.getElementById('pos-amount-given');
+            amountInput.disabled = exactChecked;
+            const changeBox = document.getElementById('pos-change-due');
+
+            if (posPaymentMethod !== 'CASH' || exactChecked) {
+                changeBox.textContent = '';
+                changeBox.className = '';
+            } else {
+                const given = parseFloat(amountInput.value) || 0;
+                const change = given - total;
+                changeBox.textContent = change >= 0 ? `Change: ₱${change.toFixed(2)}` : `Short by ₱${Math.abs(change).toFixed(2)}`;
+                changeBox.className = change >= 0 ? 'positive' : 'negative';
+            }
+        }
+
+        window.submitPosSale = async function() {
+            const total = posCartTotal();
+            if (posCart.length === 0) return showToast('⚠️ Add at least one item');
+
+            let exactAmount = null, amountGiven = null;
+            if (posPaymentMethod === 'CASH') {
+                exactAmount = document.getElementById('pos-exact-amount').checked;
+                if (!exactAmount) {
+                    amountGiven = parseFloat(document.getElementById('pos-amount-given').value);
+                    if (!amountGiven || amountGiven < total) return showToast('⚠️ Amount received is less than the total');
+                }
+            }
+
+            const customerName = document.getElementById('pos-customer-name').value.trim() || 'Walk-in Customer';
+            const btn = document.getElementById('pos-checkout-btn');
+            btn.disabled = true;
+            btn.textContent = 'Processing…';
+
+            const { data, error } = await supabaseClient.rpc('place_order', {
+                p_customer_name: customerName,
+                p_customer_phone: null,
+                p_order_type: 'Walk-in',
+                p_landmark: null,
+                p_shipping_zone: null,
+                p_shipping_fee: 0,
+                p_payment_method: posPaymentMethod,
+                p_exact_amount: exactAmount,
+                p_amount_given: amountGiven,
+                p_change_due: null,
+                p_subtotal: total,
+                p_total: total,
+                p_items: posCart.map(c => ({ product_id: c.product_id, qty: c.qty, flavor: c.flavor })),
+                p_tracking_token: crypto.randomUUID()
+            });
+
+            btn.disabled = false;
+            btn.textContent = '✅ Complete Sale';
+
+            if (error) {
+                console.error(error);
+                return showToast('❌ ' + (error.message || 'Could not place order'));
+            }
+
+            // POS sales are paid and handed over at the counter immediately.
+            await supabaseClient.from('orders').update({ status: 'completed', payment_status: 'paid' }).eq('order_number', data.order_number);
+
+            renderPosReceipt(data.order_number, customerName, posCart, total, posPaymentMethod, exactAmount, amountGiven);
+
+            posCart = [];
+            document.getElementById('pos-customer-name').value = '';
+            document.getElementById('pos-amount-given').value = '';
+            document.getElementById('pos-exact-amount').checked = false;
+            document.getElementById('pos-order-form').style.display = 'none';
+
+            await loadInventory();
+            await loadOrders();
+            showToast(`✅ Order ${data.order_number} completed`);
+        };
+
+        function renderPosReceipt(orderNumber, customerName, items, total, paymentMethod, exactAmount, amountGiven) {
+            const itemsHtml = items.map(c => `<div>${c.qty}x ${c.name}${c.flavor ? ' (' + c.flavor + ')' : ''} — ₱${(c.price * c.qty).toFixed(2)}</div>`).join('');
+            const changeLine = paymentMethod === 'CASH' && !exactAmount
+                ? `<div class="order-total-row"><span>Change</span><span>₱${(amountGiven - total).toFixed(2)}</span></div>`
+                : '';
+            document.getElementById('pos-receipt-box').innerHTML = `
+                <div class="order-result status-completed">
+                    <div class="order-num-big">${orderNumber}</div>
+                    <div class="order-customer">👤 ${customerName}</div>
+                    <div class="order-items-list">${itemsHtml}</div>
+                    <div class="order-total-row"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
+                    ${changeLine}
+                    <div class="order-badges">
+                        <span class="obadge completed">completed</span>
+                        <span class="obadge paid">paid</span>
+                        <span class="obadge" style="background:#eee;color:#555;">${paymentMethod}</span>
+                    </div>
+                </div>
+                <button class="scan-again-btn" onclick="resetPosSale()">🔄 New Sale</button>
+            `;
+        }
+
+        window.resetPosSale = function() {
+            document.getElementById('pos-receipt-box').innerHTML = '';
+            document.getElementById('pos-order-form').style.display = 'block';
+            renderPosCatalog();
+            renderPosCart();
+        };
 
         // ============ REALTIME ============
         function setupRealtime() {
