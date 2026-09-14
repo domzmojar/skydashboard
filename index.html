@@ -192,13 +192,13 @@
             </div>
 
             <div class="top-nav" id="top-nav">
-                <button class="section-btn active" data-section="online">🌐 Online</button>
+                <button class="section-btn active" data-section="orders">📋 Orders</button>
                 <button class="section-btn" data-section="walkins">🔍 Walk-ins</button>
                 <button class="section-btn" data-section="pos">🛒 POS</button>
             </div>
 
             <!-- ONLINE -->
-            <div id="section-online" class="dash-section">
+            <div id="section-orders" class="dash-section">
                 <div class="dash-tabs" id="dash-tabs">
                     <button class="dash-tab active" data-tab="active">🔥 Active</button>
                     <button class="dash-tab" data-tab="pending">📝 Pending</button>
@@ -272,7 +272,7 @@
 
     <!-- BOTTOM NAV (mobile) -->
     <div class="bottom-nav" id="bottom-nav">
-        <button class="section-btn active" data-section="online">🌐<span>Online</span></button>
+        <button class="section-btn active" data-section="orders">📋<span>Orders</span></button>
         <button class="section-btn" data-section="walkins">🔍<span>Walk-ins</span></button>
         <button class="section-btn" data-section="pos">🛒<span>POS</span></button>
     </div>
@@ -377,13 +377,19 @@
         }
 
         function filteredOrders() {
-            // "Online" only covers Delivery / Pick-Up. Walk-in sales live under POS/Walk-ins.
-            const base = allOrders.filter(o => o.order_type !== 'Walk-in');
-            if (currentTab === 'active') return base.filter(o => ['pending', 'accepted', 'preparing', 'ready'].includes(o.status));
-            if (currentTab === 'pending') return base.filter(o => o.status === 'pending');
-            if (currentTab === 'completed') return base.filter(o => o.status === 'completed');
-            if (currentTab === 'cancelled') return base.filter(o => o.status === 'cancelled');
-            return base;
+            // Unified feed: Delivery, Pick-Up, and Walk-in (self-order QR or POS) all show here.
+            if (currentTab === 'active') return allOrders.filter(o => ['pending', 'accepted', 'preparing', 'ready'].includes(o.status));
+            if (currentTab === 'pending') return allOrders.filter(o => o.status === 'pending');
+            if (currentTab === 'completed') return allOrders.filter(o => o.status === 'completed');
+            if (currentTab === 'cancelled') return allOrders.filter(o => o.status === 'cancelled');
+            return allOrders;
+        }
+
+        function orderSourceLabel(o) {
+            if (o.order_type === 'Delivery') return `🏠 ${o.shipping_zone || ''} — ${o.landmark || ''}`;
+            if (o.order_type === 'Pick-Up') return '🚗 Pick-up';
+            if (o.order_type === 'Walk-in') return '🛍️ Walk-in';
+            return o.order_type || '';
         }
 
         function orderActionsHtml(o) {
@@ -427,7 +433,7 @@
                         </div>
                         <div class="order-customer">👤 ${o.customer_name}</div>
                         <div class="order-sub">
-                            ${o.order_type === 'Delivery' ? `🏠 ${o.shipping_zone || ''} — ${o.landmark || ''}` : '🚗 Pick-up'}
+                            ${orderSourceLabel(o)}
                             &nbsp;•&nbsp; ${o.payment_method}
                         </div>
                         <div class="order-items-list">${itemsHtml || '<em>No items recorded</em>'}</div>
@@ -617,19 +623,19 @@
         });
 
         // ============ TOP-LEVEL SECTIONS (Online / Walk-ins / POS) ============
-        let currentSection = 'online';
+        let currentSection = 'orders';
 
         function switchSection(section) {
             currentSection = section;
             document.querySelectorAll('.section-btn').forEach(b => b.classList.toggle('active', b.dataset.section === section));
-            document.getElementById('section-online').style.display = section === 'online' ? 'block' : 'none';
+            document.getElementById('section-orders').style.display = section === 'orders' ? 'block' : 'none';
             document.getElementById('section-walkins').style.display = section === 'walkins' ? 'block' : 'none';
             document.getElementById('section-pos').style.display = section === 'pos' ? 'block' : 'none';
 
             // The camera should only ever run while the Walk-ins tab is actually visible.
             if (section !== 'walkins') stopWalkinScanner();
 
-            if (section === 'online') {
+            if (section === 'orders') {
                 renderOrders();
             } else if (section === 'walkins') {
                 if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
