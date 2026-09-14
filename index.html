@@ -94,6 +94,24 @@
         }
         .inv-stock-val { min-width: 26px; text-align: center; font-weight: 700; }
         .inv-stock-val.zero { color: #C62828; }
+
+        /* WALK-IN */
+        .mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .mode-tab { flex: 1; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; font-size: .9rem; cursor: pointer; color: var(--text-medium); }
+        .mode-tab.active { background: var(--primary); color: white; }
+        #wi-scan-panel { display: none; }
+        #wi-reader { width: 100%; border-radius: var(--radius); overflow: hidden; }
+        #wi-scan-hint { text-align: center; color: var(--text-medium); font-size: .85rem; margin-top: 10px; }
+        #wi-manual-panel { display: none; }
+        .manual-form { display: flex; gap: 10px; }
+        .manual-form input { flex: 1; padding: 14px; border: 2px solid #ddd; border-radius: var(--radius-sm); font-family: inherit; font-size: .95rem; text-transform: uppercase; }
+        .manual-form button { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
+        #wi-lookup-empty { text-align: center; color: var(--text-light); padding: 40px 10px; }
+        .order-result { background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); margin-top: 18px; }
+        .order-result.status-cancelled { border-left-color: #C62828; }
+        .order-result.status-completed { border-left-color: #2E7D32; }
+        .order-num-big { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .scan-again-btn { display: block; width: 100%; margin-top: 16px; background: #f1f3f5; border: none; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; color: var(--text-medium); }
     </style>
 </head>
 <body>
@@ -129,16 +147,40 @@
                 <button class="dash-tab" data-tab="completed">✅ Completed</button>
                 <button class="dash-tab" data-tab="cancelled">❌ Cancelled</button>
                 <button class="dash-tab" data-tab="inventory">📦 Inventory</button>
+                <button class="dash-tab" data-tab="walkin">🔍 Walk-in</button>
             </div>
 
             <div id="orders-panel"></div>
             <div id="inventory-panel" style="display:none;"></div>
+
+            <div id="walkin-panel" style="display:none;">
+                <div class="mode-tabs">
+                    <button class="mode-tab active" id="wi-tab-scan" onclick="switchWalkinMode('scan')">📷 Scan QR</button>
+                    <button class="mode-tab" id="wi-tab-manual" onclick="switchWalkinMode('manual')">⌨️ Type Number</button>
+                </div>
+
+                <div id="wi-scan-panel">
+                    <div id="wi-reader"></div>
+                    <div id="wi-scan-hint">Point the camera at the customer's order QR code</div>
+                </div>
+
+                <div id="wi-manual-panel">
+                    <div class="manual-form">
+                        <input type="text" id="wi-order-input" placeholder="e.g. SST-260827-001" autocomplete="off">
+                        <button onclick="lookupWalkinOrder(document.getElementById('wi-order-input').value)">🔍 Find</button>
+                    </div>
+                </div>
+
+                <div id="wi-lookup-empty">🔎 Scan or type an order number to look it up</div>
+                <div id="wi-order-result-box"></div>
+            </div>
         </div>
     </div>
 
     <div id="toast" class="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         const supabaseUrl = "https://rmtberbypsjcydomvhvu.supabase.co";
         const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGJlcmJ5cHNqY3lkb212aHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTU0NDYsImV4cCI6MjEwMzM5MTQ0Nn0.mgo9Cj8ManeLMF9DVA__7a4iAZ7OmYu81NkAEY7Pov0";
@@ -181,6 +223,7 @@
         }
 
         async function doLogout() {
+            stopWalkinScanner();
             await supabaseClient.auth.signOut();
             document.getElementById('dash-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'block';
@@ -352,6 +395,113 @@
             el.classList.toggle('zero', newStock <= 0);
         };
 
+        // ============ WALK-IN (SCAN / SEARCH) ============
+        let wiHtml5QrCode = null;
+        let wiCurrentOrder = null;
+
+        function switchWalkinMode(mode) {
+            document.getElementById('wi-tab-scan').classList.toggle('active', mode === 'scan');
+            document.getElementById('wi-tab-manual').classList.toggle('active', mode === 'manual');
+            document.getElementById('wi-scan-panel').style.display = mode === 'scan' ? 'block' : 'none';
+            document.getElementById('wi-manual-panel').style.display = mode === 'manual' ? 'block' : 'none';
+            if (mode === 'scan') {
+                startWalkinScanner();
+            } else {
+                stopWalkinScanner();
+            }
+        }
+
+        function startWalkinScanner() {
+            if (wiHtml5QrCode) return;
+            wiHtml5QrCode = new Html5Qrcode("wi-reader");
+            wiHtml5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    lookupWalkinOrder(decodedText);
+                    stopWalkinScanner();
+                    document.getElementById('wi-scan-hint').textContent = '✅ Scanned! Tap "Scan QR" again for the next order.';
+                },
+                () => {}
+            ).catch(() => {
+                document.getElementById('wi-scan-hint').textContent = '⚠️ Camera unavailable — use "Type Number" instead.';
+            });
+        }
+
+        function stopWalkinScanner() {
+            if (wiHtml5QrCode) {
+                wiHtml5QrCode.stop().then(() => wiHtml5QrCode.clear()).catch(() => {});
+                wiHtml5QrCode = null;
+            }
+        }
+
+        window.lookupWalkinOrder = async function(rawInput) {
+            const orderNumber = (rawInput || '').trim().toUpperCase();
+            if (!orderNumber) return showToast('⚠️ Enter or scan an order number');
+
+            const { data: orders, error } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .eq('order_number', orderNumber)
+                .limit(1);
+
+            if (error) { showToast('❌ Lookup failed'); console.error(error); return; }
+            if (!orders || orders.length === 0) {
+                document.getElementById('wi-order-result-box').innerHTML = '';
+                document.getElementById('wi-lookup-empty').style.display = 'block';
+                document.getElementById('wi-lookup-empty').textContent = '❌ Order not found: ' + orderNumber;
+                return showToast('❌ Order not found');
+            }
+
+            wiCurrentOrder = orders[0];
+
+            const { data: items, error: itemsErr } = await supabaseClient
+                .from('order_items')
+                .select('*')
+                .eq('order_id', wiCurrentOrder.id);
+
+            renderWalkinOrder(wiCurrentOrder, itemsErr ? [] : (items || []));
+            document.getElementById('wi-lookup-empty').style.display = 'none';
+        };
+
+        function renderWalkinOrder(o, items) {
+            const itemsHtml = items.map(it =>
+                `<div>${it.qty}x ${it.product_name}${it.flavor ? ' (' + it.flavor + ')' : ''} — ₱${(it.price * it.qty).toFixed(2)}</div>`
+            ).join('');
+            const time = new Date(o.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('wi-order-result-box').innerHTML = `
+                <div class="order-result status-${o.status}">
+                    <div class="order-num-big">${o.order_number}</div>
+                    <div style="font-size:.75rem;color:var(--text-light);">${time}</div>
+                    <div class="order-customer">👤 ${o.customer_name}</div>
+                    <div class="order-items-list">${itemsHtml || '<em>No items recorded</em>'}</div>
+                    <div class="order-total-row"><span>Total</span><span>₱${parseFloat(o.total).toFixed(2)}</span></div>
+                    <div class="order-badges">
+                        <span class="obadge ${o.status}">${o.status}</span>
+                        <span class="obadge ${o.payment_status}">${o.payment_status.replace('_',' ')}</span>
+                        <span class="obadge" style="background:#eee;color:#555;">${o.payment_method}</span>
+                    </div>
+                    <div class="order-actions">${orderActionsHtml(o)}</div>
+                </div>
+                <button class="scan-again-btn" onclick="resetWalkinLookup()">🔄 Next customer</button>
+            `;
+        }
+
+        window.resetWalkinLookup = function() {
+            wiCurrentOrder = null;
+            document.getElementById('wi-order-result-box').innerHTML = '';
+            const input = document.getElementById('wi-order-input');
+            if (input) input.value = '';
+            document.getElementById('wi-lookup-empty').style.display = 'block';
+            document.getElementById('wi-lookup-empty').textContent = '🔎 Scan or type an order number to look it up';
+            if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
+        };
+
+        document.getElementById('wi-order-input')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') lookupWalkinOrder(e.target.value);
+        });
+
         // ============ TABS ============
         document.getElementById('dash-tabs').addEventListener('click', (e) => {
             const btn = e.target.closest('.dash-tab');
@@ -362,12 +512,24 @@
 
             const ordersPanel = document.getElementById('orders-panel');
             const invPanel = document.getElementById('inventory-panel');
+            const walkinPanel = document.getElementById('walkin-panel');
+
+            // Leaving walk-in: always stop the camera so it doesn't run in the background.
+            if (currentTab !== 'walkin') stopWalkinScanner();
+
             if (currentTab === 'inventory') {
                 ordersPanel.style.display = 'none';
                 invPanel.style.display = 'block';
+                walkinPanel.style.display = 'none';
+            } else if (currentTab === 'walkin') {
+                ordersPanel.style.display = 'none';
+                invPanel.style.display = 'none';
+                walkinPanel.style.display = 'block';
+                if (document.getElementById('wi-tab-scan').classList.contains('active')) startWalkinScanner();
             } else {
                 ordersPanel.style.display = 'block';
                 invPanel.style.display = 'none';
+                walkinPanel.style.display = 'none';
                 renderOrders();
             }
         });

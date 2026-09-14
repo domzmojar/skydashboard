@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sst-staff-v4';
+const CACHE_NAME = 'sst-staff-v5';
 const PRECACHE_URLS = ['index.html', 'cashier.html', 'style.css', 'manifest.json', 'dashboard-fix.js'];
 
 self.addEventListener('install', (event) => {
